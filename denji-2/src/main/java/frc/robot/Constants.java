@@ -20,17 +20,37 @@ import edu.wpi.first.wpilibj.RobotBase;
  */
 public final class Constants {
   //Controls
-  public static final int XBOX_CONTROLLER_PORT = 0;
+  public static final int XBOX_CONTROLLER_PORT = ;
   public static final double XBOX_JOYSTICK_THRESHOLD = 0.05D;
-  public static final int JOYSTICK_PORT = 1;// HF Joystick
-  public static final int BUTTONS_PORT = 2; // A-PAC Player 1
-  public static final int SELECTOR_PORT = 3; // A-PAC Player 2
+  public static final int JOYSTICK_PORT = ;
+  public static final int BUTTONS_PORT = ; 
+  public static final int SELECTOR_PORT = ; 
 
-//Intake
+  // Position in rotations of the motor shaft before gearbox
+  public static final double JOINT_MIN_POSITION = ; // Code stop
+  public static final double JOINT_MAX_POSITION = ; // Code stop
+  public static final double JOINT_STOW_POSITION = ;
+  public static final double JOINT_DANGER_POSITION = ; // Min position where joint doesn't hit limelight mount
+
+  public static final double JOINT_CUBE_GROUND_POSITION = ;
+  public static final double JOINT_CUBE_LOW_POSITION = JOINT_STOW_POSITION;
+  public static final double JOINT_CUBE_MID_POSITION = ;
+  public static final double JOINT_CUBE_HIGH_POSITION = ;
+  public static final double JOINT_CUBE_SHELF_POSITION = ;
+  public static final double JOINT_CUBE_LAUNCH_POSITION = ;
+  public static final double JOINT_CLAMP_POSITION = ;
+
+  public static final double TOF_DISTANCE_METERS_CUBE = ;
+
+  //Intake
   public static final int INTAKE_MOTOR_ID = ;
   public static final int INTAKE_THRESHOLD_CURRENT = ; // Amps
-  
-//Joint
+
+  //Launch
+  public static final int LAUNCH_MOTOR_ID = ;
+  public static final int LAUNCH_THRESHOLD_CURRENT = ; // Amps
+    
+  //Joint
   public static final int JOINT_MOTOR_ID = ;
   public static final int JOINT_ZERO_SWITCH_CHANNEL = ;
   public static final double JOINT_SLOW_MODE_MULTIPLIER = ;
