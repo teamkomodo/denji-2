@@ -42,6 +42,7 @@ public class RobotContainer {
   // Subsystem definitions should be public for auto reasons
   public final JointSubsystem jointSubsystem = new JointSubsystem(mainTab);
   public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  public final LaunchSubsystem launchSubsystem = new LaunchSubsystem();
   public final LEDStripSubsystem ledStripSubsystem = new LEDStripSubsystem();
 
   private final CommandXboxController driverXBoxController = new CommandXboxController(
@@ -84,31 +85,37 @@ public class RobotContainer {
     Trigger leftTrigger = driverXBoxController.leftTrigger();
     Trigger rightTrigger = driverXBoxController.rightTrigger();
 
-    Trigger rightDriverJoystickButton = new JoystickButton(driverJoystick, 1);
-    Trigger leftDriverJoystickButton = new JoystickButton(driverJoystick, 2);
+    Trigger rightDriverJoystickButton = new JoystickButton(driverJoystick, );
+    Trigger leftDriverJoystickButton = new JoystickButton(driverJoystick, );
 
-    Trigger toggleSwitch1 = new JoystickButton(driverButtons, 1);
-    Trigger toggleSwitch2 = new JoystickButton(driverButtons, 2);
-    Trigger toggleSwitch3 = new JoystickButton(driverButtons, 3);
+    Trigger toggleSwitch1 = new JoystickButton(driverButtons, );
+    Trigger toggleSwitch2 = new JoystickButton(driverButtons, );
+    Trigger toggleSwitch3 = new JoystickButton(driverButtons, );
 
-    Trigger whiteButton = new JoystickButton(driverButtons, 4);
-    Trigger yellowButton = new JoystickButton(driverButtons, 5);
-    Trigger blueButton = new JoystickButton(driverButtons, 7);
-    Trigger blueTriButton = new JoystickButton(driverButtons, 6);
+    Trigger whiteButton = new JoystickButton(driverButtons, );
+    Trigger yellowButton = new JoystickButton(driverButtons, );
+    Trigger blueButton = new JoystickButton(driverButtons, );
+    Trigger blueTriButton = new JoystickButton(driverButtons, );
+
+    ledStripSubsystem.setDefaultCommand(Commands.run(() -> {
+      ledStripSubsystem.setPattern(LEDStripSubsystem.CUBE_SIGNAL_PATTERN);
+    }, ledStripSubsystem));
+
+    ledStripSubsystem.cubeSignalCommand();
 
     //Xbox A Stows, Xbox B puts in low node, Xbox X puts in mid node, Xbox Y puts in high node
     aButton.onTrue(new StowCommand(jointSubsystem));
-    bButton.onTrue(new LowNodeCommand(jointSubsystem, cubeMode));
-    xButton.onTrue(new MidNodeCommand(jointSubsystem, cubeMode));
-    yButton.onTrue(new HighNodeCommand(jointSubsystem, cubeMode));
+    bButton.onTrue(new LowNodeCommand(jointSubsystem, launchSubsystem, cubeMode));
+    xButton.onTrue(new MidNodeCommand(jointSubsystem, launchSubsystem, cubeMode));
+    yButton.onTrue(new HighNodeCommand(jointSubsystem, launchSubsystem, cubeMode));
     
     //Xbox Start grabs from shelf, Xbox Press Right Joystick sets arm on ground
     startButton.onTrue(
-      new ShelfCommand(jointSubsystem, cubeMode));
-    rightJoystickDown.onTrue(new GroundCommand(jointSubsystem, cubeMode));
+      new ShelfCommand(jointSubsystem, intakeSubsystem, cubeMode));
+    rightJoystickDown.onTrue(new GroundCommand(jointSubsystem, intakeSubsystem, cubeMode));
     
-    //DrivStat White Button does
-    whiteButton.whileTrue(Commands.parallel(jointSubsystem.zeroCommand()));
+    //DrivStat White Button zeros the joint
+    whiteButton.whileTrue(jointSubsystem.zeroCommand());
     
     // Right Bumper starts intake (takes cube in)
     rightBumper.whileTrue(new IntakePieceCommand(intakeSubsystem, jointSubsystem, ledStripSubsystem));
@@ -116,15 +123,14 @@ public class RobotContainer {
     // Left Bumper starts outtake (spits cube out) 
     leftBumper.whileTrue(Commands.runEnd(() -> {
         ledStripSubsystem.setPattern(-0.01); // Color 1 Larson Scanner
-        intakeSubsystem.setMotorDutyCycle(1.0);
+        launchSubsystem.setMotorDutyCycle(1.0);
     }, () -> {
-        intakeSubsystem.setMotorDutyCycle(0);
-    }, intakeSubsystem, ledStripSubsystem));
+        launchSubsystem.setMotorDutyCycle(0);
+    }, launchSubsystem, ledStripSubsystem));
 
     // If the Joint is beyond the dangerous threshold, move it to the danger position 
     jointSubsystem.setDefaultCommand(Commands.run(() -> {
-      if (elevatorSubsystem.getPosition() > ELEVATOR_JOINT_DANGER_THRESHOLD
-          && jointSubsystem.getPosition() < JOINT_DANGER_POSITION) {
+      if (jointSubsystem.getPosition() < JOINT_DANGER_POSITION) {
         jointSubsystem.setPosition(JOINT_DANGER_POSITION);
       }
     }, jointSubsystem));
