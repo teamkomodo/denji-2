@@ -30,12 +30,6 @@ public final class Constants {
   public static final int INTAKE_MOTOR_ID = ;
   public static final int INTAKE_THRESHOLD_CURRENT = ; // Amps
   
-  //Claw
-  public static final int CLAW_SOLENOID_FORWARD_CHANNEL = ;
-  public static final int CLAW_SOLENOID_REVERSE_CHANNEL = ;
-  public static final int TOF_SENSOR_ID = ;
-  public static final double TOF_OFFSET_MM = ; // Distance = read() + TOF_OFFSET_MM
-
 //Joint
   public static final int JOINT_MOTOR_ID = ;
   public static final int JOINT_ZERO_SWITCH_CHANNEL = ;

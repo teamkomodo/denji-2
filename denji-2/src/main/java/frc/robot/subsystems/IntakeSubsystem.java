@@ -35,10 +35,10 @@ public class IntakeSubsystem extends SubsystemBase {
   private double filterConstant = ;
 
   public IntakeSubsystem() {
-    motor = new CANSparkMax(INTAKE_MOTOR_ID, MotorType.);
+    motor = new CANSparkMax(INTAKE_MOTOR_ID, MotorType.kBrushless);
         motor.restoreFactoryDefaults();
-        motor.setInverted();
-        motor.setSmartCurrentLimit();
+        motor.setInverted(false);
+        motor.setSmartCurrentLimit(30);
         
         encoder = motor.getEncoder();
         encoder.setPosition(0);
