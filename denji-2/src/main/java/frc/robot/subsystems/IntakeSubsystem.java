@@ -22,17 +22,16 @@ public class IntakeSubsystem extends SubsystemBase {
   private final CANSparkMax motor;
   private final SparkMaxPIDController pidController;
   private final RelativeEncoder encoder;
-  private final DigitalInput distanceSensor;
   
   private final ShuffleboardTab shuffleboardTab;
 
-  private double p = ;
-  private double i = ;
-  private double d = ;
-  private double maxIAccum = ;
+  private double p = 0;
+  private double i = 0;
+  private double d = 0;
+  private double maxIAccum = 0;
 
-  private double smoothCurrent = ;
-  private double filterConstant = ;
+  private double smoothCurrent = 0;
+  private double filterConstant = 0;
 
   public IntakeSubsystem() {
     motor = new CANSparkMax(INTAKE_MOTOR_ID, MotorType.kBrushless);

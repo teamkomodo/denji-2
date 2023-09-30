@@ -19,8 +19,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.IntakeSubsystem;
-
-
+import frc.robot.subsystems.LaunchSubsystem;
 
 import static frc.robot.Constants.*;
 
@@ -40,10 +39,8 @@ public class RobotContainer {
 
 
   // Subsystem definitions should be public for auto reasons
-  public final JointSubsystem jointSubsystem = new JointSubsystem(mainTab);
   public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   public final LaunchSubsystem launchSubsystem = new LaunchSubsystem();
-  public final LEDStripSubsystem ledStripSubsystem = new LEDStripSubsystem();
 
   private final CommandXboxController driverXBoxController = new CommandXboxController(
           XBOX_CONTROLLER_PORT);
@@ -85,73 +82,16 @@ public class RobotContainer {
     Trigger leftTrigger = driverXBoxController.leftTrigger();
     Trigger rightTrigger = driverXBoxController.rightTrigger();
 
-    Trigger rightDriverJoystickButton = new JoystickButton(driverJoystick, );
-    Trigger leftDriverJoystickButton = new JoystickButton(driverJoystick, );
-
-    Trigger toggleSwitch1 = new JoystickButton(driverButtons, );
-    Trigger toggleSwitch2 = new JoystickButton(driverButtons, );
-    Trigger toggleSwitch3 = new JoystickButton(driverButtons, );
-
-    Trigger whiteButton = new JoystickButton(driverButtons, );
-    Trigger yellowButton = new JoystickButton(driverButtons, );
-    Trigger blueButton = new JoystickButton(driverButtons, );
-    Trigger blueTriButton = new JoystickButton(driverButtons, );
-
-    ledStripSubsystem.setDefaultCommand(Commands.run(() -> {
-      ledStripSubsystem.setPattern(LEDStripSubsystem.CUBE_SIGNAL_PATTERN);
-    }, ledStripSubsystem));
-
-    ledStripSubsystem.cubeSignalCommand();
-
-    //Xbox A Stows, Xbox B puts in low node, Xbox X puts in mid node, Xbox Y puts in high node
-    aButton.onTrue(new StowCommand(jointSubsystem));
-    bButton.onTrue(new LowNodeCommand(jointSubsystem, launchSubsystem, cubeMode));
-    xButton.onTrue(new MidNodeCommand(jointSubsystem, launchSubsystem, cubeMode));
-    yButton.onTrue(new HighNodeCommand(jointSubsystem, launchSubsystem, cubeMode));
-    
-    //Xbox Start grabs from shelf, Xbox Press Right Joystick sets arm on ground
-    startButton.onTrue(
-      new ShelfCommand(jointSubsystem, intakeSubsystem, cubeMode));
-    rightJoystickDown.onTrue(new GroundCommand(jointSubsystem, intakeSubsystem, cubeMode));
-    
-    //DrivStat White Button zeros the joint
-    whiteButton.whileTrue(jointSubsystem.zeroCommand());
-    
-    // Right Bumper starts intake (takes cube in)
-    rightBumper.whileTrue(new IntakePieceCommand(intakeSubsystem, jointSubsystem, ledStripSubsystem));
-
     // Left Bumper starts outtake (spits cube out) 
     leftBumper.whileTrue(Commands.runEnd(() -> {
-        ledStripSubsystem.setPattern(-0.01); // Color 1 Larson Scanner
         launchSubsystem.setMotorDutyCycle(1.0);
     }, () -> {
         launchSubsystem.setMotorDutyCycle(0);
-    }, launchSubsystem, ledStripSubsystem));
+    }, launchSubsystem));
 
-    // If the Joint is beyond the dangerous threshold, move it to the danger position 
-    jointSubsystem.setDefaultCommand(Commands.run(() -> {
-      if (jointSubsystem.getPosition() < JOINT_DANGER_POSITION) {
-        jointSubsystem.setPosition(JOINT_DANGER_POSITION);
-      }
-    }, jointSubsystem));
+  }
 
-  // Right Trigger moves joint up, then holds it
-  rightTrigger.whileTrue(Commands.run(
-    () -> jointSubsystem.setMotorPercent(-driverXBoxController.getRightTriggerAxis()),
-    jointSubsystem));
-  rightTrigger.onFalse(jointSubsystem.holdPositionCommand());
-
-  // Left Trigger moves joint down, then holds it
-  leftTrigger.whileTrue(Commands.run(
-    () -> jointSubsystem.setMotorPercent(driverXBoxController.getLeftTriggerAxis()),
-    jointSubsystem));
-  leftTrigger.onFalse(jointSubsystem.holdPositionCommand());
-  
-  // If DrivStat switch 2 is on, disable limits
-  toggleSwitch2.onTrue(jointSubsystem.disableLimitsCommand()).onFalse(jointSubsystem.enableLimitsCommand());
-
-  // If DrivStat switch 3 is on, enable slow mode
-  toggleSwitch3.onTrue(jointSubsystem.enableSlowModeCommand()).onFalse(jointSubsystem.disableSlowModeCommand());
-
+  public Command getAutonomousCommand() {
+    return null;
   }
 }
