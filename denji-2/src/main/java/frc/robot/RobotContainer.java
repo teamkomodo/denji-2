@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.LaunchSubsystem;
 
 import static frc.robot.Constants.*;
@@ -41,6 +42,7 @@ public class RobotContainer {
   
   // Subsystem definitions should be public for auto reasons
   private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem();
+  private final LEDSubsystem ledSubsystem = new LEDSubsystem();
   public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   public final LaunchSubsystem launchSubsystem = new LaunchSubsystem();
   
@@ -108,6 +110,8 @@ public class RobotContainer {
           driverJoystick.getRawAxis(2)
           * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND, 
           true), drivetrainSubsystem));
+    
+    aButton.onTrue(ledSubsystem.idlePatternCommand());
   }
   
   public Command getAutonomousCommand() {

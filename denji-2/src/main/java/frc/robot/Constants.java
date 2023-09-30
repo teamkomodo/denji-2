@@ -78,4 +78,7 @@ public final class Constants {
   public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 1;
   public static final int BACK_RIGHT_MODULE_STEER_ENCODER = 8;
   public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(168.65);
+
+  //LED
+  public static final int LED_STRIP_PWM_CHANNEL = 0;
 }
