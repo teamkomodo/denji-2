@@ -20,38 +20,38 @@ import edu.wpi.first.wpilibj.RobotBase;
  */
 public final class Constants {
   //Controls
-  public static final int XBOX_CONTROLLER_PORT = ;
+  public static final int XBOX_CONTROLLER_PORT = 0;
   public static final double XBOX_JOYSTICK_THRESHOLD = 0.05D;
-  public static final int JOYSTICK_PORT = ;
-  public static final int BUTTONS_PORT = ; 
-  public static final int SELECTOR_PORT = ; 
+  public static final int JOYSTICK_PORT = 0;
+  public static final int BUTTONS_PORT = 0; 
+  public static final int SELECTOR_PORT = 0; 
 
   // Position in rotations of the motor shaft before gearbox
-  public static final double JOINT_MIN_POSITION = ; // Code stop
-  public static final double JOINT_MAX_POSITION = ; // Code stop
-  public static final double JOINT_STOW_POSITION = ;
-  public static final double JOINT_DANGER_POSITION = ; // Min position where joint doesn't hit limelight mount
+  public static final double JOINT_MIN_POSITION = 0; // Code stop
+  public static final double JOINT_MAX_POSITION = 0; // Code stop
+  public static final double JOINT_STOW_POSITION = 0;
+  public static final double JOINT_DANGER_POSITION = 0; // Min position where joint doesn't hit limelight mount
 
-  public static final double JOINT_CUBE_GROUND_POSITION = ;
+  public static final double JOINT_CUBE_GROUND_POSITION = 0;
   public static final double JOINT_CUBE_LOW_POSITION = JOINT_STOW_POSITION;
-  public static final double JOINT_CUBE_MID_POSITION = ;
-  public static final double JOINT_CUBE_HIGH_POSITION = ;
-  public static final double JOINT_CUBE_SHELF_POSITION = ;
-  public static final double JOINT_CUBE_LAUNCH_POSITION = ;
-  public static final double JOINT_CLAMP_POSITION = ;
+  public static final double JOINT_CUBE_MID_POSITION = 0;
+  public static final double JOINT_CUBE_HIGH_POSITION = 0;
+  public static final double JOINT_CUBE_SHELF_POSITION = 0;
+  public static final double JOINT_CUBE_LAUNCH_POSITION = 0;
+  public static final double JOINT_CLAMP_POSITION = 0;
 
-  public static final double TOF_DISTANCE_METERS_CUBE = ;
+  public static final double TOF_DISTANCE_METERS_CUBE = 0;
 
   //Intake
-  public static final int INTAKE_MOTOR_ID = ;
-  public static final int INTAKE_THRESHOLD_CURRENT = ; // Amps
+  public static final int INTAKE_MOTOR_ID = 0;
+  public static final int INTAKE_THRESHOLD_CURRENT = 0; // Amps
 
   //Launch
-  public static final int LAUNCH_MOTOR_ID = ;
-  public static final int LAUNCH_THRESHOLD_CURRENT = ; // Amps
+  public static final int LAUNCH_MOTOR_ID = 0;
+  public static final int LAUNCH_THRESHOLD_CURRENT = 0; // Amps
     
   //Joint
-  public static final int JOINT_MOTOR_ID = ;
-  public static final int JOINT_ZERO_SWITCH_CHANNEL = ;
-  public static final double JOINT_SLOW_MODE_MULTIPLIER = ;
+  public static final int JOINT_MOTOR_ID = 0;
+  public static final int JOINT_ZERO_SWITCH_CHANNEL = 0;
+  public static final double JOINT_SLOW_MODE_MULTIPLIER = 0;
 }
