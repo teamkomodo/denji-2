@@ -34,7 +34,7 @@ public class LaunchSubsystem extends SubsystemBase {
   private double filterConstant = 0;
 
   public LaunchSubsystem() {
-    motor = new CANSparkMax(INTAKE_MOTOR_ID, MotorType.kBrushless);
+    motor = new CANSparkMax(17, MotorType.kBrushless); // CHANGE DEVICE ID
         motor.restoreFactoryDefaults();
         motor.setInverted(false);
         motor.setSmartCurrentLimit(30);

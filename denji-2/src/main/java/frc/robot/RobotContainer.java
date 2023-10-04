@@ -101,13 +101,13 @@ public class RobotContainer {
     drivetrainSubsystem.setDefaultCommand(
       Commands.run(
         () -> drivetrainSubsystem.drive(
-          -driverJoystick.getRawAxis(1)
+          driverXBoxController.getLeftX()
           * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-          -driverJoystick.getRawAxis(0)
+          -driverXBoxController.getLeftY()
           * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-          driverJoystick.getRawAxis(2)
+          driverXBoxController.getRightX()
           * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND, 
-          true), drivetrainSubsystem));
+          false), drivetrainSubsystem));
   }
   
   public Command getAutonomousCommand() {

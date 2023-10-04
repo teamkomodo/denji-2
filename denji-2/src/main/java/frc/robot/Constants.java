@@ -43,15 +43,15 @@ public final class Constants {
   public static final double TOF_DISTANCE_METERS_CUBE = 0;
 
   //Intake
-  public static final int INTAKE_MOTOR_ID = 0;
+  public static final int INTAKE_MOTOR_ID = 15;
   public static final int INTAKE_THRESHOLD_CURRENT = 0; // Amps
 
   //Launch
-  public static final int LAUNCH_MOTOR_ID = 0;
+  public static final int LAUNCH_MOTOR_ID = 13;
   public static final int LAUNCH_THRESHOLD_CURRENT = 0; // Amps
     
   //Joint
-  public static final int JOINT_MOTOR_ID = 0;
+  public static final int JOINT_MOTOR_ID = 14;
   public static final int JOINT_ZERO_SWITCH_CHANNEL = 0;
   public static final double JOINT_SLOW_MODE_MULTIPLIER = 0;
 
