@@ -81,8 +81,12 @@ public class DrivetrainSubsystem extends SubsystemBase {
   private final SwerveModule backLeftModule;
   private final SwerveModule backRightModule;
 
+  private double rotationOffset = 0;
+
   public DrivetrainSubsystem() {
     ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
+    tab.addDouble("gyroYaw", () -> (getGyroYaw().getDegrees()));
+    zeroGyro();
 
     // There are 4 methods you can call to create your swerve modules.
     // The method you use depends on what motors you are using.
@@ -160,14 +164,18 @@ public class DrivetrainSubsystem extends SubsystemBase {
   }
 
   public Rotation2d getGyroYaw() {
-    return getGyroYawRaw();
+    return getGyroYawRaw().minus(Rotation2d.fromRadians(rotationOffset));
   }
 
   private Rotation2d getGyroYawRaw() {
-    if (navx.isMagnetometerCalibrated()) {
-      return Rotation2d.fromDegrees(navx.getFusedHeading());
-    }
+    // if (navx.isMagnetometerCalibrated()) {
+    //   return Rotation2d.fromDegrees(navx.getFusedHeading());
+    // }
     return Rotation2d.fromDegrees(navx.getYaw());
+  }
+
+  public void zeroGyro() {
+    rotationOffset = getGyroYawRaw().getRadians();
   }
 
   public void setSwerveModuleStates(SwerveModuleState[] states) {
