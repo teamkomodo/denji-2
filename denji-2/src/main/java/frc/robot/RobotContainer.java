@@ -19,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.LaunchSubsystem;
 
 import static frc.robot.Constants.*;
 
@@ -40,7 +39,6 @@ public class RobotContainer {
 
   // Subsystem definitions should be public for auto reasons
   public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-  public final LaunchSubsystem launchSubsystem = new LaunchSubsystem();
 
   private final CommandXboxController driverXBoxController = new CommandXboxController(
           XBOX_CONTROLLER_PORT);
@@ -82,12 +80,20 @@ public class RobotContainer {
     Trigger leftTrigger = driverXBoxController.leftTrigger();
     Trigger rightTrigger = driverXBoxController.rightTrigger();
 
-    // Left Bumper starts outtake (spits cube out) 
-    leftBumper.whileTrue(Commands.runEnd(() -> {
-        launchSubsystem.setMotorDutyCycle(1.0);
+    // Right Bumper starts Intake (no need for custom command; no current involved so inline is fine)
+    // negative for input, positive for eject
+    rightBumper.whileTrue(Commands.runEnd(() -> {
+      intakeSubsystem.setMotorDutyCycle(-1.0);
     }, () -> {
-        launchSubsystem.setMotorDutyCycle(0);
-    }, launchSubsystem));
+      intakeSubsystem.setMotorDutyCycle(0);
+    }, intakeSubsystem));
+
+    // Left Bumper starts outtake (ejects/spits cube out) 
+    leftBumper.whileTrue(Commands.runEnd(() -> {
+        intakeSubsystem.setMotorDutyCycle(1.0);
+    }, () -> {
+        intakeSubsystem.setMotorDutyCycle(0);
+    }, intakeSubsystem));
 
   }
 
