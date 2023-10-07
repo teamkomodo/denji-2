@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.JointSubsystem;
 import frc.robot.subsystems.LaunchSubsystem;
 
 import static frc.robot.Constants.*;
@@ -41,11 +41,10 @@ public class RobotContainer {
   
   // Subsystem definitions should be public for auto reasons
   private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem();
-  public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  public final JointSubsystem intakeSubsystem = new JointSubsystem();
   public final LaunchSubsystem launchSubsystem = new LaunchSubsystem();
   
-  private final CommandXboxController driverXBoxController = new CommandXboxController(
-  XBOX_CONTROLLER_PORT);
+  private final CommandXboxController driverXBoxController = new CommandXboxController(XBOX_CONTROLLER_PORT);
   private final GenericHID driverJoystick = new GenericHID(JOYSTICK_PORT);
   private final GenericHID driverButtons = new GenericHID(BUTTONS_PORT);
   private final GenericHID selector = new GenericHID(SELECTOR_PORT);

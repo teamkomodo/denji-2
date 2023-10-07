@@ -33,12 +33,17 @@ public final class Constants {
   public static final double JOINT_DANGER_POSITION = 0; // Min position where joint doesn't hit limelight mount
 
   public static final double JOINT_CUBE_GROUND_POSITION = 0;
-  public static final double JOINT_CUBE_LOW_POSITION = JOINT_STOW_POSITION;
-  public static final double JOINT_CUBE_MID_POSITION = 0;
-  public static final double JOINT_CUBE_HIGH_POSITION = 0;
-  public static final double JOINT_CUBE_SHELF_POSITION = 0;
+  public static final double JOINT_CUBE_RELEASE_POSITION = JOINT_STOW_POSITION;
   public static final double JOINT_CUBE_LAUNCH_POSITION = 0;
   public static final double JOINT_CLAMP_POSITION = 0;
+
+  public static final double[] JOINT_POSITIONS_ORDERED = { // Order in array corresponds to selector position
+    JOINT_STOW_POSITION,
+    JOINT_CUBE_GROUND_POSITION,
+    JOINT_CUBE_RELEASE_POSITION,
+    JOINT_CUBE_LAUNCH_POSITION
+};
+
 
   public static final double TOF_DISTANCE_METERS_CUBE = 0;
 
