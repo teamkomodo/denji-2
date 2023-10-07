@@ -86,13 +86,23 @@ public class RobotContainer {
     Trigger leftTrigger = driverXBoxController.leftTrigger();
     Trigger rightTrigger = driverXBoxController.rightTrigger();
     
-    // Left Bumper starts outtake (spits cube out) 
+    ledSubsystem.cubeSignalCommand();
+
+    // Left Bumper starts output (spits cube out) 
     leftBumper.whileTrue(Commands.runEnd(() -> {
       launchSubsystem.setMotorDutyCycle(1.0);
     }, () -> {
       launchSubsystem.setMotorDutyCycle(0);
-    }, launchSubsystem));
+      ledSubsystem.setPattern(LEDSubsystem.Patterns.SOLID_COLORS_DARK_RED); 
+    }, launchSubsystem, ledSubsystem));
     
+    //for intake, when false: ledStripSubsystem.setPattern(LEDSubsystem.Patterns.SOLID_COLORS_DARK_GREEN); 
+
+    /*Color ideas for claw:
+    * picking up: ledStripSubsystem.setPattern(LEDSubsystem.Patterns.SOLID_COLORS_VIOLET); 
+    * low shoot: ledStripSubsystem.setPattern(LEDSubsystem.Patterns.SOLID_COLORS_COLOR_1_PATTERN_STROBE); // Teal strobe
+    * mid shoot: ledStripSubsystem.setPattern(LEDSubsystem.Patterns.COLOR_2_PATTERN_STROBE); // Orange strobe
+    */
     // Set up the default command for the drivetrain.
     // The controls are for field-oriented driving:
     // Left stick Y axis -> forward and backwards movement
