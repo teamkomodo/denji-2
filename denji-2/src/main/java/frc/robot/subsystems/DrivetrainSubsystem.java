@@ -187,7 +187,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
 }
 
   public void drive(double forward, double right, double rotation, boolean fieldRelative) {
-    ChassisSpeeds speeds = new ChassisSpeeds(forward, right, rotation);
+    ChassisSpeeds speeds = new ChassisSpeeds(forward, right, -rotation);
         if (fieldRelative) {
             setSwerveModuleStates(kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getGyroYaw().times(-1))));
             return;

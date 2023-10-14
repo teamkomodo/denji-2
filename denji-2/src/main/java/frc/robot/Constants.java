@@ -27,14 +27,13 @@ public final class Constants {
   public static final int SELECTOR_PORT = 0; 
 
   // Position in rotations of the motor shaft before gearbox
-  public static final double JOINT_MIN_POSITION = 5; // Code stop
-  public static final double JOINT_MAX_POSITION = 10; // Code stop
+  public static final double JOINT_MIN_POSITION = 1.5; // Code stop
+  public static final double JOINT_MAX_POSITION = 19.0; // Code stop
   public static final double JOINT_STOW_POSITION = 15;
-  public static final double JOINT_DANGER_POSITION = 20; // Min position where joint doesn't hit limelight mount
 
-  public static final double JOINT_CUBE_GROUND_POSITION = 5;
-  public static final double JOINT_CUBE_RELEASE_POSITION = 0;
-  public static final double JOINT_CUBE_LAUNCH_POSITION = 0;
+  public static final double JOINT_CUBE_GROUND_POSITION = 18.0;
+  public static final double JOINT_CUBE_RELEASE_POSITION = 15.0;
+  public static final double JOINT_CUBE_LAUNCH_POSITION = 2;
   public static final double JOINT_CLAMP_POSITION = 0;
 
   public static final double[] JOINT_POSITIONS_ORDERED = { // Order in array corresponds to selector position

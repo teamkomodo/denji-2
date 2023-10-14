@@ -32,9 +32,9 @@ public class JointSubsystem extends SubsystemBase {
   
   private final ShuffleboardTab shuffleboardTab;
 
-  private double p = 0;
-  private double i = 0;
-  private double d = 0;
+  private double p = 0.075;
+  private double i = 0.000005;
+  private double d = 0.005;
   private double maxIAccum = 0;
   
   //limit
@@ -45,17 +45,14 @@ public class JointSubsystem extends SubsystemBase {
   private double commandedPosition = 0;
 
   private boolean useLimits = false;
-  private boolean slowMode = false;
 
   private boolean zeroed = true;
-
-  private double smoothCurrent = 0;
 
   public JointSubsystem() {
     motor = new CANSparkMax(JOINT_MOTOR_ID, MotorType.kBrushless);
         motor.restoreFactoryDefaults();
         motor.setInverted(false);
-        motor.setSmartCurrentLimit(30);
+        motor.setSmartCurrentLimit(50);
 
         reverseSwitch = new DigitalInput(JOINT_ZERO_SWITCH_CHANNEL);
         
@@ -73,7 +70,6 @@ public class JointSubsystem extends SubsystemBase {
 
         shuffleboardTab.addDouble("Motor Velocity", () -> encoder.getVelocity());
         shuffleboardTab.addDouble("Motor Current", () -> motor.getOutputCurrent());
-        shuffleboardTab.addDouble("Smooth Current", () -> smoothCurrent);
         shuffleboardTab.addDouble("Motor Position", () -> encoder.getPosition());
     }
 
@@ -128,20 +124,19 @@ public class JointSubsystem extends SubsystemBase {
 
   public void setMotorPercent(double percent) {
     //at min and attempting to decrease and zeroed (allow movement past limit if not yet zeroed)
-    motor.set(0.5);
-    // if(atMinLimit && percent < 0 && zeroed && useLimits)
-    //     return;
+    if(atMinLimit && percent < 0 && zeroed && useLimits)
+        return;
     
-    // //at max or not yet zeroed and attempting to increase
-    // if((atMaxLimit || !zeroed) && percent > 0 && useLimits)
-    //     return;
-    // pidController.setReference(percent * (slowMode? JOINT_SLOW_MODE_MULTIPLIER : 1) * 0.1, ControlType.kDutyCycle);
+    //at max or not yet zeroed and attempting to increase
+    if((atMaxLimit || !zeroed) && percent > 0 && useLimits)
+        return;
+    pidController.setReference(percent * 0.5, ControlType.kDutyCycle);
   }
 
   public void setPosition(double position) {
     //position out of bounds
-    if(position < JOINT_MIN_POSITION || position > JOINT_MAX_POSITION)
-        return;
+    //if(position < JOINT_MIN_POSITION || position > JOINT_MAX_POSITION)
+    //    return;
     
     //not zeroed and moving away from limit switch
     if(!zeroed & position > encoder.getPosition())
@@ -160,16 +155,16 @@ public class JointSubsystem extends SubsystemBase {
     return this.runOnce(() -> setPosition(encoder.getPosition()));
   }
 
-  public Command grabPositionCommand(BooleanSupplier cubeMode) {
-    return this.runOnce(() -> setPosition(cubeMode.getAsBoolean()? JOINT_CUBE_GROUND_POSITION: JOINT_CUBE_GROUND_POSITION));
+  public Command grabPositionCommand() {
+    return this.runOnce(() -> setPosition(JOINT_CUBE_GROUND_POSITION));
   }
 
-  public Command releasePositionCommand(BooleanSupplier cubeMode) {
-    return this.runOnce(() -> setPosition(cubeMode.getAsBoolean()? JOINT_CUBE_RELEASE_POSITION: JOINT_CUBE_RELEASE_POSITION));
+  public Command releasePositionCommand() {
+    return this.runOnce(() -> setPosition(JOINT_CUBE_RELEASE_POSITION));
   }
 
-  public Command launchPositionCommand(BooleanSupplier cubeMode) {
-    return this.runOnce(() -> setPosition(cubeMode.getAsBoolean()? JOINT_CUBE_LAUNCH_POSITION: JOINT_CUBE_LAUNCH_POSITION));
+  public Command launchPositionCommand( ) {
+    return this.runOnce(() -> setPosition(JOINT_CUBE_LAUNCH_POSITION));
   }
 
   public Command zeroCommand() {
@@ -189,8 +184,8 @@ public Command enableLimitsCommand() {
 
 @Override
 public void periodic() {
-    //checkMinLimit();
-    //checkMaxLimit();
+    checkMinLimit();
+    checkMaxLimit();
     //checkLimitSwitch();
 }
 

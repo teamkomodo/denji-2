@@ -19,8 +19,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivetrainSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.JointSubsystem;
-import frc.robot.subsystems.LaunchSubsystem;
 
 import static frc.robot.Constants.*;
 
@@ -42,7 +42,7 @@ public class RobotContainer {
   // Subsystem definitions should be public for auto reasons
   private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem();
   public final JointSubsystem jointSubsystem = new JointSubsystem();
-  public final LaunchSubsystem launchSubsystem = new LaunchSubsystem();
+  public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   
   private final CommandXboxController driverXBoxController = new CommandXboxController(XBOX_CONTROLLER_PORT);
   private final GenericHID driverJoystick = new GenericHID(JOYSTICK_PORT);
@@ -84,15 +84,28 @@ public class RobotContainer {
     Trigger rightTrigger = driverXBoxController.rightTrigger();
     
     //leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(leftTrigger));
-    leftTrigger.whileTrue(Commands.run(() -> jointSubsystem.setMotorPercent(0.5)));
+    //leftTrigger.whileTrue(Commands.run(() -> jointSubsystem.setMotorPercent(0.5)));
+    //leftTrigger.onFalse(Commands.run(() -> jointSubsystem.setMotorPercent(0.0)));
+    //rightTrigger.whileTrue(Commands.run(() -> jointSubsystem.setMotorPercent(-0.5)));
+    //rightTrigger.onFalse(Commands.run(() -> jointSubsystem.setMotorPercent(0.0)));
+    aButton.onTrue(jointSubsystem.grabPositionCommand());
+    leftTrigger.onTrue(jointSubsystem.launchPositionCommand());
+    rightTrigger.onTrue(jointSubsystem.releasePositionCommand());
+    xButton.onTrue(jointSubsystem.launchPositionCommand());
+    bButton.onTrue(jointSubsystem.releasePositionCommand());
     //leftTrigger.whileTrue(Commands.print("working..."));
     //leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(() -> (false)));
     // Left Bumper starts outtake (spits cube out) 
     leftBumper.whileTrue(Commands.runEnd(() -> {
-      launchSubsystem.setMotorDutyCycle(1.0);
+      intakeSubsystem.setMotorDutyCycle(1.0);
     }, () -> {
-      launchSubsystem.setMotorDutyCycle(0);
-    }, launchSubsystem));
+      intakeSubsystem.setMotorDutyCycle(0);
+    }, intakeSubsystem));
+    rightBumper.whileTrue(Commands.runEnd(() -> {
+      intakeSubsystem.setMotorDutyCycle(-1.0);
+    }, () -> {
+      intakeSubsystem.setMotorDutyCycle(0);
+    }, intakeSubsystem));
     
     // Set up the default command for the drivetrain.
     // The controls are for field-oriented driving:
