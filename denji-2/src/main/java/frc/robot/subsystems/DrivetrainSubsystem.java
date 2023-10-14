@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.sensors.CANCoder;
 import com.kauailabs.navx.frc.AHRS;
 import com.swervedrivespecialties.swervelib.Mk3SwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
@@ -45,9 +46,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
    * This is a measure of how fast the robot should be able to drive in a straight
    * line.
    */
-  public static final double MAX_VELOCITY_METERS_PER_SECOND = 6380.0 / 60.0
-      * SdsModuleConfigurations.MK4_L1.getDriveReduction() * SdsModuleConfigurations.MK4_L1.getWheelDiameter()
-      * Math.PI;
+  // public static final double MAX_VELOCITY_METERS_PER_SECOND = 6380.0 / 60.0
+  //     * SdsModuleConfigurations.MK4_L1.getDriveReduction() * SdsModuleConfigurations.MK4_L1.getWheelDiameter()
+  //     * Math.PI;
+  public static final double MAX_VELOCITY_METERS_PER_SECOND = 9.0;
   /**
    * The maximum angular velocity of the robot in radians per second.
    * <p>
@@ -127,21 +129,26 @@ public class DrivetrainSubsystem extends SubsystemBase {
         // zero is facing straight forward)
         FRONT_LEFT_MODULE_STEER_OFFSET);
 
+        new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET));
+
     // We will do the same for the other modules
     frontRightModule = Mk3SwerveModuleHelper.createFalcon500(
         tab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(2, 0),
         Mk3SwerveModuleHelper.GearRatio.STANDARD, FRONT_RIGHT_MODULE_DRIVE_MOTOR, FRONT_RIGHT_MODULE_STEER_MOTOR,
         FRONT_RIGHT_MODULE_STEER_ENCODER, FRONT_RIGHT_MODULE_STEER_OFFSET);
+        new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET));
 
     backLeftModule = Mk3SwerveModuleHelper.createFalcon500(
         tab.getLayout("Back Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(4, 0),
         Mk3SwerveModuleHelper.GearRatio.STANDARD, BACK_LEFT_MODULE_DRIVE_MOTOR, BACK_LEFT_MODULE_STEER_MOTOR,
         BACK_LEFT_MODULE_STEER_ENCODER, BACK_LEFT_MODULE_STEER_OFFSET);
+        new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET));
 
     backRightModule = Mk3SwerveModuleHelper.createFalcon500(
         tab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(6, 0),
         Mk3SwerveModuleHelper.GearRatio.STANDARD, BACK_RIGHT_MODULE_DRIVE_MOTOR, BACK_RIGHT_MODULE_STEER_MOTOR,
         BACK_RIGHT_MODULE_STEER_ENCODER, BACK_RIGHT_MODULE_STEER_OFFSET);
+        new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET));
   }
 
   /**
@@ -176,6 +183,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   public void zeroGyro() {
     rotationOffset = getGyroYawRaw().getRadians();
+    new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET), 1000);
+    new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET), 1000);
+    new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET), 1000);
+    new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET), 1000);
   }
 
   public void setSwerveModuleStates(SwerveModuleState[] states) {
