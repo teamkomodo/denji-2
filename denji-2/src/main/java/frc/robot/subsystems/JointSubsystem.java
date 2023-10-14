@@ -44,10 +44,10 @@ public class JointSubsystem extends SubsystemBase {
 
   private double commandedPosition = 0;
 
-  private boolean useLimits = true;
+  private boolean useLimits = false;
   private boolean slowMode = false;
 
-  private boolean zeroed = false;
+  private boolean zeroed = true;
 
   private double smoothCurrent = 0;
 
@@ -74,6 +74,7 @@ public class JointSubsystem extends SubsystemBase {
         shuffleboardTab.addDouble("Motor Velocity", () -> encoder.getVelocity());
         shuffleboardTab.addDouble("Motor Current", () -> motor.getOutputCurrent());
         shuffleboardTab.addDouble("Smooth Current", () -> smoothCurrent);
+        shuffleboardTab.addDouble("Motor Position", () -> encoder.getPosition());
     }
 
   public void teleopInit() {
@@ -187,9 +188,9 @@ public Command enableLimitsCommand() {
 
 @Override
 public void periodic() {
-    checkMinLimit();
-    checkMaxLimit();
-    checkLimitSwitch();
+    //checkMinLimit();
+    //checkMaxLimit();
+    //checkLimitSwitch();
 }
 
 public void setPID(double p, double i, double d) {

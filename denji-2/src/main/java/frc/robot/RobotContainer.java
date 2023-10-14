@@ -41,7 +41,7 @@ public class RobotContainer {
   
   // Subsystem definitions should be public for auto reasons
   private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem();
-  public final JointSubsystem intakeSubsystem = new JointSubsystem();
+  public final JointSubsystem jointSubsystem = new JointSubsystem();
   public final LaunchSubsystem launchSubsystem = new LaunchSubsystem();
   
   private final CommandXboxController driverXBoxController = new CommandXboxController(XBOX_CONTROLLER_PORT);
@@ -83,6 +83,7 @@ public class RobotContainer {
     Trigger leftTrigger = driverXBoxController.leftTrigger();
     Trigger rightTrigger = driverXBoxController.rightTrigger();
     
+    leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(leftTrigger));
     // Left Bumper starts outtake (spits cube out) 
     leftBumper.whileTrue(Commands.runEnd(() -> {
       launchSubsystem.setMotorDutyCycle(1.0);
