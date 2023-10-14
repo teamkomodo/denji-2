@@ -34,7 +34,7 @@ public class JointSubsystem extends SubsystemBase {
 
   private double p = 0.075;
   private double i = 0.000005;
-  private double d = 0.005;
+  private double d = 0.01;
   private double maxIAccum = 0;
   
   //limit

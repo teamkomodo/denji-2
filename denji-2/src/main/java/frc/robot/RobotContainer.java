@@ -89,8 +89,8 @@ public class RobotContainer {
     //rightTrigger.whileTrue(Commands.run(() -> jointSubsystem.setMotorPercent(-0.5)));
     //rightTrigger.onFalse(Commands.run(() -> jointSubsystem.setMotorPercent(0.0)));
     aButton.onTrue(jointSubsystem.grabPositionCommand());
-    leftTrigger.onTrue(jointSubsystem.launchPositionCommand());
-    rightTrigger.onTrue(jointSubsystem.releasePositionCommand());
+    leftTrigger.whileTrue(jointSubsystem.launchPositionCommand());
+    rightTrigger.whileTrue(jointSubsystem.releasePositionCommand());
     xButton.onTrue(jointSubsystem.launchPositionCommand());
     bButton.onTrue(jointSubsystem.releasePositionCommand());
     //leftTrigger.whileTrue(Commands.print("working..."));
@@ -124,6 +124,8 @@ public class RobotContainer {
           driverXBoxController.getRightX()
           * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND, 
           true), drivetrainSubsystem));
+
+    yButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
   }
   
   public Command getAutonomousCommand() {
