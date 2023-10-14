@@ -83,7 +83,10 @@ public class RobotContainer {
     Trigger leftTrigger = driverXBoxController.leftTrigger();
     Trigger rightTrigger = driverXBoxController.rightTrigger();
     
-    leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(leftTrigger));
+    //leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(leftTrigger));
+    leftTrigger.whileTrue(Commands.run(() -> jointSubsystem.setMotorPercent(0.5)));
+    //leftTrigger.whileTrue(Commands.print("working..."));
+    //leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(() -> (false)));
     // Left Bumper starts outtake (spits cube out) 
     leftBumper.whileTrue(Commands.runEnd(() -> {
       launchSubsystem.setMotorDutyCycle(1.0);

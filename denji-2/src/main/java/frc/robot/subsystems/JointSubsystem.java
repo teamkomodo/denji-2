@@ -52,7 +52,7 @@ public class JointSubsystem extends SubsystemBase {
   private double smoothCurrent = 0;
 
   public JointSubsystem() {
-    motor = new CANSparkMax(INTAKE_MOTOR_ID, MotorType.kBrushless);
+    motor = new CANSparkMax(JOINT_MOTOR_ID, MotorType.kBrushless);
         motor.restoreFactoryDefaults();
         motor.setInverted(false);
         motor.setSmartCurrentLimit(30);
@@ -128,13 +128,14 @@ public class JointSubsystem extends SubsystemBase {
 
   public void setMotorPercent(double percent) {
     //at min and attempting to decrease and zeroed (allow movement past limit if not yet zeroed)
-    if(atMinLimit && percent < 0 && zeroed && useLimits)
-        return;
+    motor.set(0.5);
+    // if(atMinLimit && percent < 0 && zeroed && useLimits)
+    //     return;
     
-    //at max or not yet zeroed and attempting to increase
-    if((atMaxLimit || !zeroed) && percent > 0 && useLimits)
-        return;
-    pidController.setReference(percent * (slowMode? JOINT_SLOW_MODE_MULTIPLIER : 1) * 0.1, ControlType.kDutyCycle);
+    // //at max or not yet zeroed and attempting to increase
+    // if((atMaxLimit || !zeroed) && percent > 0 && useLimits)
+    //     return;
+    // pidController.setReference(percent * (slowMode? JOINT_SLOW_MODE_MULTIPLIER : 1) * 0.1, ControlType.kDutyCycle);
   }
 
   public void setPosition(double position) {
