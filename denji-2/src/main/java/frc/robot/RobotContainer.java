@@ -40,7 +40,7 @@ public class RobotContainer {
   
   
   // Subsystem definitions should be public for auto reasons
-  private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem();
+  private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
   public final JointSubsystem jointSubsystem = new JointSubsystem();
   public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   
@@ -114,16 +114,10 @@ public class RobotContainer {
     // Right stick X axis -> rotation
     // Drivetrain Commands
     // Drive command
-    drivetrainSubsystem.setDefaultCommand(
-      Commands.run(
-        () -> drivetrainSubsystem.drive(
-          -driverXBoxController.getLeftY()
-          * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-          -driverXBoxController.getLeftX()
-          * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-          driverXBoxController.getRightX()
-          * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND, 
-          true), drivetrainSubsystem));
+    drivetrainSubsystem.setDefaultCommand(drivetrainSubsystem.joystickDriveCommand(
+        () -> driverXBoxController.getLeftY() * MAX_LINEAR_VELOCITY,
+        () -> driverXBoxController.getLeftX() * MAX_LINEAR_VELOCITY,
+        () -> -driverXBoxController.getRightX() * MAX_ANGULAR_VELOCITY)); // Negative because counter clockwise (left/-x on controller) should be positive
 
     yButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
   }
