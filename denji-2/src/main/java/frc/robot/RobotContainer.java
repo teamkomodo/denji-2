@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.GenericHID;
 
@@ -24,7 +25,14 @@ import frc.robot.subsystems.JointSubsystem;
 
 import static frc.robot.Constants.*;
 
+import java.util.HashMap;
 import java.util.function.BooleanSupplier;
+
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.auto.PIDConstants;
+import com.pathplanner.lib.auto.SwerveAutoBuilder;
 
 
 /**
@@ -48,11 +56,40 @@ public class RobotContainer {
   private final GenericHID driverJoystick = new GenericHID(JOYSTICK_PORT);
   private final GenericHID driverButtons = new GenericHID(BUTTONS_PORT);
   private final GenericHID selector = new GenericHID(SELECTOR_PORT);
+
+  private final HashMap<String, Command> eventMap = new HashMap<>();
+
+    private final SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
+        drivetrainSubsystem::getPose,
+        drivetrainSubsystem::resetPose,
+        drivetrainSubsystem.getKinematics(),
+        new PIDConstants(5.0, 0.0, 0.0),
+        new PIDConstants(1.5, 0.0, 0.0),
+        drivetrainSubsystem::setModuleStates,
+        eventMap, true, drivetrainSubsystem
+    );
+
+    private final SendableChooser<Command> autoChooser = new SendableChooser<>();
   
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     SmartDashboard.putData("Field", field2d);
+    configureAuto();
     configureBindings();
+  }
+
+  private void configureAuto() {
+
+    eventMap.put("place", Commands.sequence(
+        jointSubsystem.releasePositionCommand(),
+        Commands.waitSeconds(1.0),
+        Commands.runEnd(() -> intakeSubsystem.setMotorDutyCycle(1.0), () -> intakeSubsystem.setMotorDutyCycle(0), intakeSubsystem).withTimeout(0.2),
+        Commands.run(() -> jointSubsystem.setPosition(JOINT_STOW_POSITION), jointSubsystem).withTimeout(0.5))
+    );
+
+    autoChooser.addOption("No Auto", null);
+    autoChooser.addOption("Place Mobility Open", autoBuilder.fullAuto(PathPlanner.loadPath("Place Mobility Open", new PathConstraints(2.0, 1.5))));
+    SmartDashboard.putData("Auto Selection", autoChooser);
   }
   
   private void configureBindings() {
@@ -123,6 +160,6 @@ public class RobotContainer {
   }
   
   public Command getAutonomousCommand() {
-    return null;
+    return autoChooser.getSelected();
   }
 }
