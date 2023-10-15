@@ -1,208 +1,297 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.sensors.CANCoder;
-import com.kauailabs.navx.frc.AHRS;
-import com.swervedrivespecialties.swervelib.Mk3SwerveModuleHelper;
-import com.swervedrivespecialties.swervelib.SdsModuleConfigurations;
-import com.swervedrivespecialties.swervelib.SwerveModule;
-
-import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.util.FalconSwerveModule;
+import frc.robot.util.SwerveModule;
 
 import static frc.robot.Constants.*;
 
-public class DrivetrainSubsystem extends SubsystemBase {
-  /**
-   * The maximum voltage that will be delivered to the drive motors.
-   * <p>
-   * This can be reduced to cap the robot's maximum speed. Typically, this is
-   * useful during initial testing of the robot.
-   */
-  public static final double MAX_VOLTAGE = 12.0;
-  // FIXME Measure the drivetrain's maximum velocity or calculate the theoretical.
-  // The formula for calculating the theoretical maximum velocity is:
-  // <Motor free speed RPM> / 60 * <Drive reduction> * <Wheel diameter meters> *
-  // pi
-  // By default this value is setup for a Mk3 standard module using Falcon500s to
-  // drive.
-  // An example of this constant for a Mk4 L2 module with NEOs to drive is:
-  // 5880.0 / 60.0 / SdsModuleConfigurations.MK4_L2.getDriveReduction() *
-  // SdsModuleConfigurations.MK4_L2.getWheelDiameter() * Math.PI
-  /**
-   * The maximum velocity of the robot in meters per second.
-   * <p>
-   * This is a measure of how fast the robot should be able to drive in a straight
-   * line.
-   */
-  // public static final double MAX_VELOCITY_METERS_PER_SECOND = 6380.0 / 60.0
-  //     * SdsModuleConfigurations.MK4_L1.getDriveReduction() * SdsModuleConfigurations.MK4_L1.getWheelDiameter()
-  //     * Math.PI;
-  public static final double MAX_VELOCITY_METERS_PER_SECOND = 9.0;
-  /**
-   * The maximum angular velocity of the robot in radians per second.
-   * <p>
-   * This is a measure of how fast the robot can rotate in place.
-   */
-  // Here we calculate the theoretical maximum angular velocity. You can also
-  // replace this with a measured amount.
-  public static final double MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND = MAX_VELOCITY_METERS_PER_SECOND
-      / Math.hypot(DRIVETRAIN_TRACKWIDTH_METERS / 2.0, DRIVETRAIN_WHEELBASE_METERS / 2.0);
+import java.util.function.DoubleSupplier;
 
-  private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
-      // Front left
-      new Translation2d(DRIVETRAIN_TRACKWIDTH_METERS / 2.0, DRIVETRAIN_WHEELBASE_METERS / 2.0),
-      // Front right
-      new Translation2d(DRIVETRAIN_TRACKWIDTH_METERS / 2.0, -DRIVETRAIN_WHEELBASE_METERS / 2.0),
-      // Back left
-      new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, DRIVETRAIN_WHEELBASE_METERS / 2.0),
-      // Back right
-      new Translation2d(-DRIVETRAIN_TRACKWIDTH_METERS / 2.0, -DRIVETRAIN_WHEELBASE_METERS / 2.0));
+import com.kauailabs.navx.frc.AHRS;
 
-  // By default we use a Pigeon for our gyroscope. But if you use another
-  // gyroscope, like a NavX, you can change this.
-  // The important thing about how you configure your gyroscope is that rotating
-  // the robot counter-clockwise should
-  // cause the angle reading to increase until it wraps back over to zero.
-  private final AHRS navx = new AHRS(SPI.Port.kMXP, (byte) 200); // NavX connected over MXP
+public class DrivetrainSubsystem implements Subsystem {
 
-  // These are our modules. We initialize them in the constructor.
-  private final SwerveModule frontLeftModule;
-  private final SwerveModule frontRightModule;
-  private final SwerveModule backLeftModule;
-  private final SwerveModule backRightModule;
+    /*
+     * Robot Coordinate System
+     * See https://docs.wpilib.org/en/stable/docs/software/advanced-controls/geometry/coordinate-systems.html#robot-coordinate-system
+     * Forward is x+, Left is y+, counterclockwise is theta+
+     */
 
-  private double rotationOffset = 0; 
+    private final Translation2d frontLeftPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D); // All translations are relative to center of rotation
+    private final Translation2d frontRightPosition = new Translation2d(DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
+    private final Translation2d backLeftPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, DRIVETRAIN_LENGTH / 2D);
+    private final Translation2d backRightPosition = new Translation2d(-DRIVETRAIN_WIDTH / 2D, -DRIVETRAIN_LENGTH / 2D);
 
-  public DrivetrainSubsystem() {
-    ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
-    tab.addDouble("gyroYaw", () -> (getGyroYaw().getDegrees()));
-    zeroGyro();
+    private final SwerveModule frontLeft;
+    private final SwerveModule frontRight;
+    private final SwerveModule backLeft;
+    private final SwerveModule backRight;
 
-    // There are 4 methods you can call to create your swerve modules.
-    // The method you use depends on what motors you are using.
-    //
-    // Mk3SwerveModuleHelper.createFalcon500(...)
-    // Your module has two Falcon 500s on it. One for steering and one for driving.
-    //
-    // Mk3SwerveModuleHelper.createNeo(...)
-    // Your module has two NEOs on it. One for steering and one for driving.
-    //
-    // Mk3SwerveModuleHelper.createFalcon500Neo(...)
-    // Your module has a Falcon 500 and a NEO on it. The Falcon 500 is for driving
-    // and the NEO is for steering.
-    //
-    // Mk3SwerveModuleHelper.createNeoFalcon500(...)
-    // Your module has a NEO and a Falcon 500 on it. The NEO is for driving and the
-    // Falcon 500 is for steering.
-    //
-    // Similar helpers also exist for Mk4 modules using the Mk4SwerveModuleHelper
-    // class.
+    private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(frontLeftPosition, frontRightPosition, backLeftPosition, backRightPosition);
+    private final SwerveDriveOdometry odometry;
+    private final Field2d field;
 
-    // By default we will use Falcon 500s in standard configuration. But if you use
-    // a different configuration or motors
-    // you MUST change it. If you do not, your code will crash on startup.
-    frontLeftModule = Mk3SwerveModuleHelper.createFalcon500(
-        // This parameter is optional, but will allow you to see the current state of
-        // the module on the dashboard.
-        tab.getLayout("Front Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0),
-        // This can either be STANDARD or FAST depending on your gear configuration
-        Mk3SwerveModuleHelper.GearRatio.STANDARD,
-        // This is the ID of the drive motor
-        FRONT_LEFT_MODULE_DRIVE_MOTOR,
-        // This is the ID of the steer motor
-        FRONT_LEFT_MODULE_STEER_MOTOR,
-        // This is the ID of the steer encoder
-        FRONT_LEFT_MODULE_STEER_ENCODER,
-        // This is how much the steer encoder is offset from true zero (In our case,
-        // zero is facing straight forward)
-        FRONT_LEFT_MODULE_STEER_OFFSET);
+    private final HolonomicDriveController driveController = new HolonomicDriveController(
+        new PIDController(1, 0, 0),
+        new PIDController(1, 0, 0),
+        new ProfiledPIDController(1, 0, 0, new TrapezoidProfile.Constraints(MAX_ANGULAR_VELOCITY, MAX_ANGULAR_ACCEL)));
+    
+    private final AHRS navX = new AHRS(SPI.Port.kMXP, (byte) 200);
 
-        new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET));
+    private boolean slowMode = false;
+    private double rotationOffsetRadians = 0.0;
 
-    // We will do the same for the other modules
-    frontRightModule = Mk3SwerveModuleHelper.createFalcon500(
-        tab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(2, 0),
-        Mk3SwerveModuleHelper.GearRatio.STANDARD, FRONT_RIGHT_MODULE_DRIVE_MOTOR, FRONT_RIGHT_MODULE_STEER_MOTOR,
-        FRONT_RIGHT_MODULE_STEER_ENCODER, FRONT_RIGHT_MODULE_STEER_OFFSET);
-        new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET));
+    public DrivetrainSubsystem(Field2d field) {
+        this.field = field;
 
-    backLeftModule = Mk3SwerveModuleHelper.createFalcon500(
-        tab.getLayout("Back Left Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(4, 0),
-        Mk3SwerveModuleHelper.GearRatio.STANDARD, BACK_LEFT_MODULE_DRIVE_MOTOR, BACK_LEFT_MODULE_STEER_MOTOR,
-        BACK_LEFT_MODULE_STEER_ENCODER, BACK_LEFT_MODULE_STEER_OFFSET);
-        new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET));
+        ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
 
-    backRightModule = Mk3SwerveModuleHelper.createFalcon500(
-        tab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4).withPosition(6, 0),
-        Mk3SwerveModuleHelper.GearRatio.STANDARD, BACK_RIGHT_MODULE_DRIVE_MOTOR, BACK_RIGHT_MODULE_STEER_MOTOR,
-        BACK_RIGHT_MODULE_STEER_ENCODER, BACK_RIGHT_MODULE_STEER_OFFSET);
-        new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET));
-  }
+        frontLeft = new FalconSwerveModule(
+                FRONT_LEFT_DRIVE_MOTOR_ID,
+                FRONT_LEFT_STEER_MOTOR_ID,
+                FRONT_LEFT_STEER_ENCODER_ID,
+                FRONT_LEFT_STEER_OFFSET,
+                tab.getLayout("Front Left", BuiltInLayouts.kList).withSize(3, 7).withPosition(0, 0));
+        
+        frontRight = new FalconSwerveModule(
+                FRONT_RIGHT_DRIVE_MOTOR_ID,
+                FRONT_RIGHT_STEER_MOTOR_ID,
+                FRONT_RIGHT_STEER_ENCODER_ID,
+                FRONT_RIGHT_STEER_OFFSET,
+                tab.getLayout("Front Right", BuiltInLayouts.kList).withSize(3, 7).withPosition(3, 0));
 
-  /**
-   * Sets the gyroscope angle to zero. This can be used to set the direction the
-   * robot is currently facing to the 'forwards' direction.
-   */
-  public void zeroGyroscope() {
-    navx.zeroYaw();
-  }
+        backLeft = new FalconSwerveModule(
+                BACK_LEFT_DRIVE_MOTOR_ID,
+                BACK_LEFT_STEER_MOTOR_ID,
+                BACK_LEFT_STEER_ENCODER_ID,
+                BACK_LEFT_STEER_OFFSET,
+                tab.getLayout("Back Left", BuiltInLayouts.kList).withSize(3, 7).withPosition(6, 0));
+        
+        backRight = new FalconSwerveModule(
+                BACK_RIGHT_DRIVE_MOTOR_ID,
+                BACK_RIGHT_STEER_MOTOR_ID,
+                BACK_RIGHT_STEER_ENCODER_ID,
+                BACK_RIGHT_STEER_OFFSET,
+                tab.getLayout("Back Right", BuiltInLayouts.kList).withSize(3, 7).withPosition(9, 0));
 
-  public Rotation2d getGyroscopeRotation() {
-    if (navx.isMagnetometerCalibrated()) {
-      // We will only get valid fused headings if the magnetometer is calibrated
-      return Rotation2d.fromDegrees(navx.getFusedHeading());
+        tab.add("Test Drivetrain", testDrivetrain()).withPosition(8, 0);
+
+        tab.addNumber("Rotation", () -> (getAdjustedRotation().getDegrees()));
+
+        odometry = new SwerveDriveOdometry(
+                kinematics,
+                navX.getRotation2d(),
+                new SwerveModulePosition[] {
+                        frontLeft.getPosition(),
+                        frontRight.getPosition(),
+                        backLeft.getPosition(),
+                        backRight.getPosition()
+                });
+        resetPose(new Pose2d(new Translation2d(0, 0), Rotation2d.fromDegrees(0)));
     }
-    //
-    // We have to invert the angle of the NavX so that rotating the robot
-    // counter-clockwise makes the angle increase.
-    return Rotation2d.fromDegrees(360.0 - navx.getYaw());
-  }
 
-  public Rotation2d getGyroYaw() {
-    return getGyroYawRaw().minus(Rotation2d.fromRadians(rotationOffset));
-  }
+    @Override
+    public void periodic() {
+        
+        // does not need to use adjusted rotation, odometry handles it.
+        odometry.update(navX.getRotation2d(), getSwervePositions());
+        field.setRobotPose(getPose());
 
-  private Rotation2d getGyroYawRaw() {
-    // if (navx.isMagnetometerCalibrated()) {
-    //   return Rotation2d.fromDegrees(navx.getFusedHeading());
-    // }
-    return Rotation2d.fromDegrees(navx.getYaw());
-  }
+    }
+
+    public void drive(double xSpeed, double ySpeed, double angularVelocity, boolean fieldRelative) {
+        ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, angularVelocity);
+
+        SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(fieldRelative? ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, getAdjustedRotation()) : chassisSpeeds);
+        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, MAX_LINEAR_VELOCITY);
+
+        setModuleStates(moduleStates);
+    }
+
+    public void drive(ChassisSpeeds speeds, boolean fieldRelative) {
+        drive(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond, fieldRelative);
+    }
+
+    public void stopMotion() {
+        drive(0, 0, 0, false);
+    }
+
+    public void zeroGyro() {
+        rotationOffsetRadians = -navX.getRotation2d().getRadians();
+        //resetPose(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(0)));
+    }
+
+    // Getters
+
+    public SwerveModulePosition[] getSwervePositions() {
+        return new SwerveModulePosition[] {
+            frontLeft.getPosition(),
+            frontRight.getPosition(),
+            backLeft.getPosition(),
+            backRight.getPosition()
+        };
+    }
+
+    public Pose2d getPose() {
+        return odometry.getPoseMeters();
+    }
+
+    public SwerveDriveKinematics getKinematics() {
+        return kinematics;
+    }
+
+    public AHRS getNavx() {
+        return navX;
+    }
+
+    public HolonomicDriveController getDriveController() {
+        return driveController;
+    }
+
+    public Rotation2d getAdjustedRotation() {
+        return navX.getRotation2d().plus(Rotation2d.fromRadians(rotationOffsetRadians));
+    }
+
+    // Setters
+
+    public void setModuleStates(SwerveModuleState[] moduleStates) {
+        frontLeft.setDesiredState(moduleStates[0]);
+        frontRight.setDesiredState(moduleStates[1]);
+        backLeft.setDesiredState(moduleStates[2]);
+        backRight.setDesiredState(moduleStates[3]);
+    }
+
+    public void resetPose(Pose2d pose) {
+        //does not need to be adjusted rotation, odometry handles this
+        odometry.resetPosition(navX.getRotation2d(), getSwervePositions(), pose);
+    }
+
+    public void setGyro(Rotation2d rotation) {
+        rotationOffsetRadians = -navX.getRotation2d().getRadians() + rotation.getRadians();
+    }
+
+    // Commands
+
+    public CommandBase testDrivetrain() {
+        return Commands.sequence(
+            Commands.run(() -> {
+                setModuleStates(new SwerveModuleState[] {
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),
+                    new SwerveModuleState(0.0, Rotation2d.fromDegrees(0))
+                });
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                setModuleStates(new SwerveModuleState[] {
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(0))
+                });
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                setModuleStates(new SwerveModuleState[] {
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(90))
+                });
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                setModuleStates(new SwerveModuleState[] {
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(180))
+                });
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                setModuleStates(new SwerveModuleState[] {
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90)),
+                    new SwerveModuleState(1.0, Rotation2d.fromDegrees(-90))
+                });
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                setModuleStates(new SwerveModuleState[] {
+                    new SwerveModuleState(0, Rotation2d.fromDegrees(360)),
+                    new SwerveModuleState(0, Rotation2d.fromDegrees(360)),
+                    new SwerveModuleState(0, Rotation2d.fromDegrees(360)),
+                    new SwerveModuleState(0, Rotation2d.fromDegrees(360))
+                });
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                drive(0, 0.0, 0, false);
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                drive(1.0, 0.0, 0, false);
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                drive(-1.0, 0.0, 0, false);
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                drive(0.0, 1.0, 0, false);
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                drive(0.0, -1.0, 0, false);
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                drive(0.0, 0.0, 1.0, false);
+            }, this).withTimeout(1),
+            Commands.run(() -> {
+                drive(0.0, 0.0, -1.0, false);
+            }, this).withTimeout(1)
+        );
+    }
 
   public void zeroGyro() {
     rotationOffset = getGyroYawRaw().getRadians();
-    //new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET), 1000);
-    //new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET), 1000);
-    //new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET), 1000);
-    //new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET), 1000);
+    new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET), 1000);
+    new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET), 1000);
+    new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET), 1000);
+    new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET), 1000);
   }
 
-  public void setSwerveModuleStates(SwerveModuleState[] states) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(states, MAX_VELOCITY_METERS_PER_SECOND);
-    frontLeftModule.set(states[0].speedMetersPerSecond, states[0].angle.getRadians());
-    frontRightModule.set(states[1].speedMetersPerSecond, states[1].angle.getRadians());
-    backLeftModule.set(states[2].speedMetersPerSecond, states[2].angle.getRadians());
-    backRightModule.set(states[3].speedMetersPerSecond, states[3].angle.getRadians());
-}
+    public CommandBase enableSlowModeCommand() {
+        return Commands.runOnce(() -> { slowMode = true; });
+    }
 
-  public void drive(double forward, double right, double rotation, boolean fieldRelative) {
-    ChassisSpeeds speeds = new ChassisSpeeds(forward, right, -rotation);
-        if (fieldRelative) {
-            setSwerveModuleStates(kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getGyroYaw().times(-1))));
-            return;
-        }
-        setSwerveModuleStates(kinematics.toSwerveModuleStates(speeds));
-  }
+    public CommandBase disableSlowModeCommand() {
+        return Commands.runOnce(() -> { slowMode = false; });
+    }
+
+    public CommandBase joystickDriveCommand(DoubleSupplier xAxis, DoubleSupplier yAxis, DoubleSupplier rotAxis) {
+        return Commands.run(() -> {
+
+            double xVelocity = MathUtil.applyDeadband(xAxis.getAsDouble(), 0.01) * MAX_LINEAR_VELOCITY * (slowMode ? LINEAR_SLOW_MODE_MODIFIER : 1);
+            double yVelocity = MathUtil.applyDeadband(yAxis.getAsDouble(), 0.01) * MAX_LINEAR_VELOCITY * (slowMode ? LINEAR_SLOW_MODE_MODIFIER : 1);
+            double rotVelocity = MathUtil.applyDeadband(rotAxis.getAsDouble(), 0.01) * MAX_ANGULAR_VELOCITY * (slowMode ? ANGULAR_SLOW_MODE_MODIFIER : 1);
+            drive(xVelocity, yVelocity, rotVelocity, FIELD_RELATIVE_DRIVE);
+
+        }, this);
+    }
+    
 }
