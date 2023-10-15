@@ -183,10 +183,10 @@ public class DrivetrainSubsystem extends SubsystemBase {
 
   public void zeroGyro() {
     rotationOffset = getGyroYawRaw().getRadians();
-    new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET), 1000);
-    new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET), 1000);
-    new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET), 1000);
-    new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET), 1000);
+    //new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET), 1000);
+    //new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET), 1000);
+    //new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET), 1000);
+    //new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET), 1000);
   }
 
   public void setSwerveModuleStates(SwerveModuleState[] states) {
