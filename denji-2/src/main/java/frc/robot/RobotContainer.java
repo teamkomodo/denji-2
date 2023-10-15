@@ -145,14 +145,13 @@ public class RobotContainer {
     }, intakeSubsystem));
 
     bButton.whileTrue(Commands.runEnd(() -> {
-      if (jointSubsystem.getPosition() < 15.5 && jointSubsystem.getPosition() > 14.5) {
+      if (14.0 < jointSubsystem.getPosition() && 16.0 > jointSubsystem.getPosition()) {
         intakeSubsystem.setMotorDutyCycle(1.0);
       }
     }, () -> {
       intakeSubsystem.setMotorDutyCycle(0);
     }, intakeSubsystem));
     aButton.whileTrue(Commands.runEnd(() -> {
-      if (jointSubsystem.getPosition() < 19.5 && jointSubsystem.getPosition() > 18.5)
       intakeSubsystem.setMotorDutyCycle(-1.0);
     }, () -> {
       intakeSubsystem.setMotorDutyCycle(0);
