@@ -59,7 +59,7 @@ public class DrivetrainSubsystem implements Subsystem {
     
     private final AHRS navX = new AHRS(SPI.Port.kMXP, (byte) 200);
 
-    private boolean slowMode = true;
+    private boolean slowMode = false;
     private double rotationOffsetRadians = 0.0;
 
     public DrivetrainSubsystem(Field2d field) {
@@ -265,6 +265,17 @@ public class DrivetrainSubsystem implements Subsystem {
                 drive(0.0, 0.0, -1.0, false);
             }, this).withTimeout(1)
         );
+    }
+
+    public CommandBase runForward() {
+        return Commands.run(() -> {
+            setModuleStates(new SwerveModuleState[] {
+                new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(1.0, Rotation2d.fromDegrees(0)),
+                new SwerveModuleState(1.0, Rotation2d.fromDegrees(0))
+            });
+        }, this);
     }
 
     public CommandBase enableSlowModeCommand() {

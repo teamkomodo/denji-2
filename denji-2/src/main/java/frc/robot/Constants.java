@@ -88,10 +88,12 @@ public final class Constants {
   public static final double MAX_LINEAR_VELOCITY = 3.0;
   public static final double MAX_LINEAR_ACCEL = 6.0;
 
-  public static final double MAX_ANGULAR_VELOCITY = 4.0 * Math.PI;
+  public static final double MAX_ANGULAR_VELOCITY = 2.0 * Math.PI;
   public static final double MAX_ANGULAR_ACCEL = 4.0 * Math.PI;
 
   public static final double FALCON_500_NOMINAL_VOLTAGE = 12.0;
   public static final double TALON_FX_TICKS_PER_ROTATION = 2048.0;
   
 }
+
+

@@ -27,9 +27,9 @@ public class FalconSwerveModule implements SwerveModule{
     private final double driveI = 0;
     private final double driveD = 0;
 
-    private final double steerP = 1.0;
-    private final double steerI = 0;
-    private final double steerD = 0;
+    private final double steerP = 2.0e-1;
+    private final double steerI = 1.0e-6;
+    private final double steerD = 1.0e-7;
 
     private final TalonFX driveMotor;
     private final TalonFX steerMotor;
@@ -38,16 +38,17 @@ public class FalconSwerveModule implements SwerveModule{
     private final PIDController driveController = new PIDController(driveP, driveI, driveD);
     
     // TODO Measure This
-    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0, 3.33); // V/M/s
+    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0, 3.0); // V/M/s
 
     private SwerveModuleState desiredState;
+    private double adjustedDesiredAngle = 0;
 
     private double relativeSteerAdjustment = 0;
     private double relativeSteerAdjustmentFactor = 0.1;
 
     public FalconSwerveModule(int driveMotorId, int steerMotorId, int steerAbsoluteEncoderId, double steerOffset, ShuffleboardContainer container) {
         this.driveMotor = new TalonFX(driveMotorId);
-        this.steerMotor = new TalonFX(driveMotorId);
+        this.steerMotor = new TalonFX(steerMotorId);
         this.steerAbsoluteEncoder = new CANCoder(steerAbsoluteEncoderId);
         this.desiredState = new SwerveModuleState(0.0, Rotation2d.fromRadians(0));
 
@@ -61,8 +62,8 @@ public class FalconSwerveModule implements SwerveModule{
     private void buildShuffleboard(ShuffleboardContainer container) {
         container.addNumber("Desired Velocity", () -> desiredState.speedMetersPerSecond);
         container.addNumber("Desired Rotation", () -> desiredState.angle.getDegrees());
-        container.addNumber("Rotation Error", () -> Math.toDegrees(MathUtil.angleModulus(getSteerPosition())) - desiredState.angle.getDegrees());
-        container.addNumber("Velocity Error", () -> getDrivePosition() - desiredState.speedMetersPerSecond);
+        container.addNumber("Rotation Error", () -> Math.toDegrees(getSteerPosition() - adjustedDesiredAngle));
+        container.addNumber("Velocity Error", () -> getDriveVelocity() - desiredState.speedMetersPerSecond);
 
         container.addNumber("Raw Absolute Rotation", () -> steerAbsoluteEncoder.getAbsolutePosition());
         // container.addNumber("Adjusted Absolute Rotation", () -> getAbsoluteModuleRotation().getDegrees());
@@ -73,17 +74,18 @@ public class FalconSwerveModule implements SwerveModule{
 
     private void configureMotors() {
 
-        driveMotor.setSensorPhase(true); // invert the sensor
+        //driveMotor.setSensorPhase(true); // invert the sensor
         driveMotor.setInverted(true); // invert the motor
         driveMotor.setNeutralMode(NeutralMode.Brake); // motor brakes when idle
 
-        steerMotor.setSensorPhase(true);
-        steerMotor.setInverted(true);
+        steerMotor.setSensorPhase(false);
+        steerMotor.setInverted(false);
         steerMotor.setNeutralMode(NeutralMode.Brake);
 
         steerMotor.config_kP(0, steerP);
         steerMotor.config_kI(0, steerI);
         steerMotor.config_kD(0, steerD);
+        steerMotor.setSelectedSensorPosition(Math.toRadians(steerAbsoluteEncoder.getAbsolutePosition()) / steerPositionConversionFactor);
 
     }
 
@@ -105,26 +107,28 @@ public class FalconSwerveModule implements SwerveModule{
         driveMotor.set(TalonFXControlMode.PercentOutput, (driveOutput + driveFeedforward) / FALCON_500_NOMINAL_VOLTAGE); // Output Voltage / Max Voltage = Percent Output
 
         double currentAngleMod = MathUtil.angleModulus(getSteerPosition());
-        double adjustedAngle = optimizedState.angle.getRadians() + getSteerPosition() + currentAngleMod;
+        double adjustedAngle = optimizedState.angle.getRadians() + getSteerPosition() - currentAngleMod;
 
         if(optimizedState.angle.getRadians() - currentAngleMod > Math.PI) {
             adjustedAngle -= 2.0 * Math.PI;
         }else if(optimizedState.angle.getRadians() - currentAngleMod < -Math.PI) {
             adjustedAngle += 2.0 * Math.PI;
         }
-
+        adjustedDesiredAngle = adjustedAngle;
         steerMotor.set(TalonFXControlMode.Position, adjustedAngle / steerPositionConversionFactor);
-
+        //steerMotor.set(TalonFXControlMode.Position, 0);
         this.desiredState = optimizedState;
+
+        //correctRelativeEncoder();
     }
 
-    @SuppressWarnings(value = { "unused" })
+    //@SuppressWarnings(value = { "unused" })
     private void correctRelativeEncoder() {
         double delta = getAbsoluteModuleRotation().getRadians()-getModuleRotation().getRadians();
         if(delta > Math.PI)
             delta -= 2 * Math.PI;
 
-        if(delta < -180)
+        if(delta < -Math.PI)
             delta += 2 * Math.PI;
 
         relativeSteerAdjustment += delta * relativeSteerAdjustmentFactor;

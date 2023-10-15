@@ -143,6 +143,7 @@ public class RobotContainer {
     }, () -> {
       intakeSubsystem.setMotorDutyCycle(0);
     }, intakeSubsystem));
+
     
     // Set up the default command for the drivetrain.
     // The controls are for field-oriented driving:
@@ -151,10 +152,13 @@ public class RobotContainer {
     // Right stick X axis -> rotation
     // Drivetrain Commands
     // Drive command
+
+    //aButton.whileTrue(drivetrainSubsystem.runForward());
+
     drivetrainSubsystem.setDefaultCommand(drivetrainSubsystem.joystickDriveCommand(
-        () -> driverXBoxController.getLeftY() * MAX_LINEAR_VELOCITY,
-        () -> driverXBoxController.getLeftX() * MAX_LINEAR_VELOCITY,
-        () -> -driverXBoxController.getRightX() * MAX_ANGULAR_VELOCITY)); // Negative because counter clockwise (left/-x on controller) should be positive
+        () -> -Math.pow(driverXBoxController.getLeftY(), 3),
+        () -> -Math.pow(driverXBoxController.getLeftX(), 3),
+        () -> -Math.pow(driverXBoxController.getRightX(), 3))); // Negative because counter clockwise (left/-x on controller) should be positive
 
     yButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
   }
