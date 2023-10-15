@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -106,8 +107,8 @@ public class FalconSwerveModule implements SwerveModule{
         
         driveMotor.set(TalonFXControlMode.PercentOutput, (driveOutput + driveFeedforward) / FALCON_500_NOMINAL_VOLTAGE); // Output Voltage / Max Voltage = Percent Output
 
-        double currentAngleMod = MathUtil.angleModulus(getSteerPosition());
-        double adjustedAngle = optimizedState.angle.getRadians() + getSteerPosition() - currentAngleMod;
+        double currentAngleMod = MathUtil.angleModulus(getModuleRotation().getRadians());
+        double adjustedAngle = optimizedState.angle.getRadians() + getModuleRotation().getRadians() - currentAngleMod;
 
         if(optimizedState.angle.getRadians() - currentAngleMod > Math.PI) {
             adjustedAngle -= 2.0 * Math.PI;
@@ -124,7 +125,18 @@ public class FalconSwerveModule implements SwerveModule{
 
     //@SuppressWarnings(value = { "unused" })
     private void correctRelativeEncoder() {
-        double delta = getAbsoluteModuleRotation().getRadians()-getModuleRotation().getRadians();
+
+        double absoluteAngle = Math.toRadians(steerAbsoluteEncoder.getAbsolutePosition());
+        double currentAngleMod = MathUtil.angleModulus(getModuleRotation().getRadians());
+        double adjustedAngle = absoluteAngle + getSteerPosition() - currentAngleMod;
+
+        if(absoluteAngle - currentAngleMod > Math.PI) {
+            adjustedAngle -= 2.0 * Math.PI;
+        }else if(absoluteAngle - currentAngleMod < -Math.PI) {
+            adjustedAngle += 2.0 * Math.PI;
+        }
+
+        double delta = adjustedAngle - getSteerPosition();
         if(delta > Math.PI)
             delta -= 2 * Math.PI;
 

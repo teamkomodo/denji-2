@@ -22,10 +22,10 @@ public final class Constants {
 
   // Position in rotations of the motor shaft before gearbox
   public static final double JOINT_MIN_POSITION = 1.5; // Code stop
-  public static final double JOINT_MAX_POSITION = 19.0; // Code stop
+  public static final double JOINT_MAX_POSITION = 19.5; // Code stop
   public static final double JOINT_STOW_POSITION = 15;
 
-  public static final double JOINT_CUBE_GROUND_POSITION = 18.0;
+  public static final double JOINT_CUBE_GROUND_POSITION = 19.0;
   public static final double JOINT_CUBE_RELEASE_POSITION = 15.0;
   public static final double JOINT_CUBE_LAUNCH_POSITION = 2;
   public static final double JOINT_CLAMP_POSITION = 0;

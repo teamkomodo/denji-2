@@ -128,7 +128,7 @@ public class RobotContainer {
     aButton.onTrue(jointSubsystem.grabPositionCommand());
     leftTrigger.whileTrue(jointSubsystem.launchPositionCommand());
     rightTrigger.whileTrue(jointSubsystem.releasePositionCommand());
-    xButton.onTrue(jointSubsystem.launchPositionCommand());
+    yButton.onTrue(jointSubsystem.launchPositionCommand());
     bButton.onTrue(jointSubsystem.releasePositionCommand());
     //leftTrigger.whileTrue(Commands.print("working..."));
     //leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(() -> (false)));
@@ -139,6 +139,20 @@ public class RobotContainer {
       intakeSubsystem.setMotorDutyCycle(0);
     }, intakeSubsystem));
     rightBumper.whileTrue(Commands.runEnd(() -> {
+      intakeSubsystem.setMotorDutyCycle(-1.0);
+    }, () -> {
+      intakeSubsystem.setMotorDutyCycle(0);
+    }, intakeSubsystem));
+
+    bButton.whileTrue(Commands.runEnd(() -> {
+      if (jointSubsystem.getPosition() < 15.5 && jointSubsystem.getPosition() > 14.5) {
+        intakeSubsystem.setMotorDutyCycle(1.0);
+      }
+    }, () -> {
+      intakeSubsystem.setMotorDutyCycle(0);
+    }, intakeSubsystem));
+    aButton.whileTrue(Commands.runEnd(() -> {
+      if (jointSubsystem.getPosition() < 19.5 && jointSubsystem.getPosition() > 18.5)
       intakeSubsystem.setMotorDutyCycle(-1.0);
     }, () -> {
       intakeSubsystem.setMotorDutyCycle(0);
@@ -160,7 +174,7 @@ public class RobotContainer {
         () -> -Math.pow(driverXBoxController.getLeftX(), 3),
         () -> -Math.pow(driverXBoxController.getRightX(), 3))); // Negative because counter clockwise (left/-x on controller) should be positive
 
-    yButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
+    xButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
   }
   
   public Command getAutonomousCommand() {
