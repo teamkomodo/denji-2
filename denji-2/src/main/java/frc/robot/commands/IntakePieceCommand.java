@@ -12,9 +12,8 @@ public class IntakePieceCommand extends CommandBase{
 
     private boolean holdingPiece;
     private long startTime;
-    //clampStart means 
-    private long clampStart;
-
+    
+    
     public IntakePieceCommand(IntakeSubsystem intakeSubsystem) {
         this.intakeSubsystem = intakeSubsystem;
 
@@ -25,7 +24,6 @@ public class IntakePieceCommand extends CommandBase{
     public void initialize() {
         holdingPiece = false;
         startTime = RobotController.getFPGATime();
-        clampStart = -1;
     }
 
     @Override
@@ -42,12 +40,7 @@ public class IntakePieceCommand extends CommandBase{
 
         intakeSubsystem.setMotorVelocity(-4000);
 
-          if(clampStart == -1){
-            clampStart = RobotController.getFPGATime();
-          }
-
-        if(Math.abs(intakeSubsystem.getSmoothCurrent()) > INTAKE_THRESHOLD_CURRENT && RobotController.getFPGATime() - startTime > 500000 && RobotController.getFPGATime() - clampStart > 500000) {
-            intakeSubsystem.setMotorDutyCycle(-0.2);
+        if(Math.abs(intakeSubsystem.getSmoothCurrent()) > INTAKE_THRESHOLD_CURRENT && RobotController.getFPGATime() - startTime > 500000) {
             holdingPiece = true;
         }
     }

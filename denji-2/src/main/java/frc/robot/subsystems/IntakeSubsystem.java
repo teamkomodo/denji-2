@@ -19,73 +19,72 @@ import static frc.robot.Constants.*;
 
 public class IntakeSubsystem extends SubsystemBase {
 
-  private final CANSparkMax motor;
-  private final SparkMaxPIDController pidController;
-  private final RelativeEncoder encoder;
+    private final CANSparkMax motor;
+    private final SparkMaxPIDController pidController;
+    private final RelativeEncoder encoder;
+    
+    private final ShuffleboardTab shuffleboardTab;
   
-  private final ShuffleboardTab shuffleboardTab;
-
-  private double p = 0;
-  private double i = 0;
-  private double d = 0;
-  private double maxIAccum = 0;
-
-  private double smoothCurrent = 0;
-  private double filterConstant = 0;
-
-  public IntakeSubsystem() {
-    motor = new CANSparkMax(INTAKE_MOTOR_ID, MotorType.kBrushless);
-        motor.restoreFactoryDefaults();
-        motor.setInverted(false);
-        motor.setSmartCurrentLimit(30);
-        
-        encoder = motor.getEncoder();
-        encoder.setPosition(0);
-
-        pidController = motor.getPIDController();
-        pidController.setP(p);
-        pidController.setI(i);
-        pidController.setD(d);
-        pidController.setIMaxAccum(maxIAccum, 0);
-        pidController.setReference(0, ControlType.kDutyCycle);
-
-        shuffleboardTab = Shuffleboard.getTab("Intake");
-
-        shuffleboardTab.addDouble("Motor Velocity", () -> encoder.getVelocity());
-        shuffleboardTab.addDouble("Motor Current", () -> motor.getOutputCurrent());
-        shuffleboardTab.addDouble("Smooth Current", () -> smoothCurrent);
+    private double p = 1.0;
+    private double i = 0;
+    private double d = 0;
+    private double maxIAccum = 0;
+  
+    private double smoothCurrent = 0;
+    private double filterConstant = 0.8;
+  
+    public IntakeSubsystem() {
+      motor = new CANSparkMax(INTAKE_MOTOR_ID, MotorType.kBrushless); // CHANGE DEVICE ID
+          motor.restoreFactoryDefaults();
+          motor.setInverted(false);
+          motor.setSmartCurrentLimit(30);
+          
+          encoder = motor.getEncoder();
+          encoder.setPosition(0);
+  
+          pidController = motor.getPIDController();
+          pidController.setP(p);
+          pidController.setI(i);
+          pidController.setD(d);
+          pidController.setIMaxAccum(maxIAccum, 0);
+          pidController.setReference(0, ControlType.kDutyCycle);
+  
+          shuffleboardTab = Shuffleboard.getTab("Launch");
+  
+          shuffleboardTab.addDouble("Motor Current", () -> motor.getOutputCurrent());
+          shuffleboardTab.addDouble("Smooth Current", () -> smoothCurrent);
+      }
+  
+    @Override
+    public void periodic() {
+        smoothCurrent = smoothCurrent * filterConstant + motor.getOutputCurrent() * (1-filterConstant);
     }
-
-  @Override
-  public void periodic() {
-      smoothCurrent = smoothCurrent * filterConstant + motor.getOutputCurrent() * (1-filterConstant);
-  }
-
-  public void teleopInit() {
-      pidController.setReference(0, ControlType.kDutyCycle);
-  } 
-
-  public void setMotorDutyCycle(double dutyCycle) {
-      pidController.setReference(dutyCycle, ControlType.kDutyCycle);
-  }
-
-  public void setMotorVelocity(double velocity) {
-      pidController.setReference(velocity, ControlType.kVelocity);
-  }
-
-  public void holdMotorPosition() {
-      pidController.setReference(encoder.getPosition(), ControlType.kPosition);
-  }
-
-  public double getCurrent() {
-      return motor.getOutputCurrent();
-  }
-
-  public double getSmoothCurrent() {
-      return smoothCurrent;
-  }
-
-  public ShuffleboardTab getTab() {
-      return shuffleboardTab;
-  }
+  
+    public void teleopInit() {
+        pidController.setReference(0, ControlType.kDutyCycle);
+    } 
+  
+    public void setMotorDutyCycle(double dutyCycle) {
+        pidController.setReference(dutyCycle, ControlType.kDutyCycle);
+    }
+  
+    public void setMotorVelocity(double velocity) {
+        pidController.setReference(velocity, ControlType.kVelocity);
+    }
+  
+    public void holdMotorPosition() {
+        pidController.setReference(encoder.getPosition(), ControlType.kPosition);
+    }
+  
+    public double getCurrent() {
+        return motor.getOutputCurrent();
+    }
+  
+    public double getSmoothCurrent() {
+        return smoothCurrent;
+    }
+  
+    public ShuffleboardTab getTab() {
+        return shuffleboardTab;
+    }
 }
