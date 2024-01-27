@@ -13,7 +13,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardContainer;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
 
 import static frc.robot.Constants.*;
 
@@ -27,14 +28,18 @@ public class FalconSwerveModule implements SwerveModule{
 
     private static final double steerPositionConversionFactor = 2 * Math.PI * STEER_REDUCTION; // motor rotations -> module rotation in radians
     
+    // Telemetry
+    private final DoublePublisher velocityErrorPublisher;
+    private final DoublePublisher rotationErrorPublisher;
+    private final DoublePublisher dutyCyclePublisher;
 
     private final double driveP = 1;
     private final double driveI = 0;
     private final double driveD = 0;
 
-    private final double steerP = 2.0e-1;
-    private final double steerI = 1.0e-6;
-    private final double steerD = 1.0e-7;
+    private final double steerP = 3;
+    private final double steerI = 0;
+    private final double steerD = 0;
 
     private final TalonFX driveMotor;
     private final TalonFX steerMotor;
@@ -42,41 +47,35 @@ public class FalconSwerveModule implements SwerveModule{
 
     private final PIDController driveController = new PIDController(driveP, driveI, driveD);
     
-    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0, 3.33); // V/M/s
+    private final SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0, 12d / MAX_MODULE_VELOCITY); // V/M/s
 
     private SwerveModuleState desiredState;
 
     private double relativeSteerAdjustment = 0;
     private double relativeSteerAdjustmentFactor = 0.1;
 
-    public FalconSwerveModule(int driveMotorId, int steerMotorId, int steerAbsoluteEncoderId, double steerOffset, ShuffleboardContainer container) {
+    public FalconSwerveModule(int driveMotorId, int steerMotorId, int steerAbsoluteEncoderId, double steerOffset, NetworkTable moduleNT) {
         this.driveMotor = new TalonFX(driveMotorId);
         this.steerMotor = new TalonFX(steerMotorId);
         this.steerAbsoluteEncoder = new CANcoder(steerAbsoluteEncoderId);
         this.desiredState = new SwerveModuleState(0.0, Rotation2d.fromRadians(0));
 
-         steerAbsoluteEncoder.getConfigurator().apply(new MagnetSensorConfigs()
+        steerAbsoluteEncoder.getConfigurator().apply(new MagnetSensorConfigs()
             .withMagnetOffset(steerOffset / (2 * Math.PI))
             .withAbsoluteSensorRange(AbsoluteSensorRangeValue.Signed_PlusMinusHalf)); // CANCoder outputs between (-0.5, 0.5)
 
-
         configureMotors();
-        buildShuffleboard(container);
+
+        // Telemetry
+        velocityErrorPublisher = moduleNT.getDoubleTopic("velocityerror").publish();
+        rotationErrorPublisher = moduleNT.getDoubleTopic("rotationerror").publish();
+        dutyCyclePublisher = moduleNT.getDoubleTopic("dutycycle").publish();
     }
 
-    private void buildShuffleboard(ShuffleboardContainer container) {
-        int row = 1;
-        container.addNumber("Desired Velocity", () -> desiredState.speedMetersPerSecond).withPosition(1, row++);
-        container.addNumber("Desired Rotation", () -> desiredState.angle.getDegrees()).withPosition(1, row++);
-        container.addNumber("Rotation Error", () -> Math.toDegrees(MathUtil.angleModulus(getSteerPosition())) - desiredState.angle.getDegrees()).withPosition(1, row++);
-        container.addNumber("Velocity Error", () -> getDrivePosition() - desiredState.speedMetersPerSecond).withPosition(1, row++);
-        container.addNumber("Velocity", () -> (getDriveVelocity())).withPosition(1, row++);
-
-        container.addNumber("Raw Absolute Rotation", () -> getAbsoluteModuleRotation().getDegrees()).withPosition(1, row++); 
-        // container.addNumber("Adjusted Absolute Rotation", () -> getAbsoluteModuleRotation().getDegrees());
-        container.addNumber("Raw Relative Rotation", () -> Math.toDegrees(getSteerPosition())).withPosition(1, row++);
-        // container.addNumber("Adjusted Relative Rotation", () -> getModuleRotation().getDegrees());
-        container.addNumber("Duty Cycle", () -> driveMotor.getDutyCycle().getValueAsDouble()).withPosition(1, row++);
+    public void updateTelemetry() {
+        velocityErrorPublisher.set(desiredState.speedMetersPerSecond - getDriveVelocity());
+        rotationErrorPublisher.set(desiredState.angle.getRadians() - getModuleRotation().getRadians());
+        dutyCyclePublisher.set(driveMotor.getDutyCycle().getValueAsDouble());
     }
 
     private void configureMotors() {
@@ -87,6 +86,7 @@ public class FalconSwerveModule implements SwerveModule{
         steerMotor.setInverted(true);
         steerMotor.setNeutralMode(NeutralModeValue.Brake);
 
+        steerMotor.setPosition(-getAbsoluteModuleRotation().getRadians() / steerPositionConversionFactor); // negative becuase relative encoder is reversed
         steerMotor.getConfigurator().apply(new Slot0Configs().withKP(steerP).withKI(steerI).withKD(steerD));
 
     }
@@ -95,12 +95,15 @@ public class FalconSwerveModule implements SwerveModule{
         return new SwerveModuleState(getDriveVelocity(), getModuleRotation());
     }
 
+    public SwerveModuleState getDesiredState() {
+        return desiredState;
+    }
+
     public SwerveModulePosition getPosition() {
         return new SwerveModulePosition(getDrivePosition(), getModuleRotation());
     }
 
     public void setDesiredState(SwerveModuleState desiredState) {
-        
         SwerveModuleState optimizedState = SwerveModuleState.optimize(desiredState, getModuleRotation()); // Doesn't matter if supplied rotation is upwrapped (I think)
 
         final double driveOutput = driveController.calculate(getDriveVelocity(), optimizedState.speedMetersPerSecond);
@@ -113,7 +116,7 @@ public class FalconSwerveModule implements SwerveModule{
         double maxInputAngle = getModuleRotation().getRadians() + Math.PI;
         double inputAngle = MathUtil.inputModulus(optimizedState.angle.getRadians(), minInputAngle, maxInputAngle);
 
-        steerMotor.setControl(new PositionVoltage(inputAngle / steerPositionConversionFactor));
+        steerMotor.setControl(new PositionVoltage(-inputAngle / steerPositionConversionFactor)); // Negtaive because motor is inverted
         this.desiredState = optimizedState;
     }
 
@@ -140,7 +143,7 @@ public class FalconSwerveModule implements SwerveModule{
     }
 
     private double getSteerPosition() {
-        return steerMotor.getPosition().getValueAsDouble() * steerPositionConversionFactor;
+        return -steerMotor.getPosition().getValueAsDouble() * steerPositionConversionFactor; // negative because motor is inverted
     }
     
     private double getDrivePosition() {

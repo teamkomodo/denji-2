@@ -5,7 +5,6 @@
 package frc.robot;
 
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -16,6 +15,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivetrainSubsystem;
 
 import static frc.robot.Constants.*;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 
 /**
@@ -52,13 +54,15 @@ public class RobotContainer {
 
 		startButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
 
+		// deadbands are applied in command
 		drivetrainSubsystem.setDefaultCommand(drivetrainSubsystem.joystickDriveCommand(
-		() -> MathUtil.applyDeadband(driverXBoxController.getLeftY(), 0.1) * MAX_LINEAR_VELOCITY,
-		() -> MathUtil.applyDeadband(driverXBoxController.getLeftX(), 0.1) * MAX_LINEAR_VELOCITY,
-		() -> -MathUtil.applyDeadband(driverXBoxController.getRightX(), 0.1) * MAX_ANGULAR_VELOCITY)); // Negative because counter clockwise (left/-x on controller) should be positive
+				() -> -driverXBoxController.getLeftY(), // -Y (up) on joystick is +X (forward) on robot
+				() -> -driverXBoxController.getLeftX(), // -X (left) on joystick is +Y (left) on robot
+				() -> -driverXBoxController.getRightX() // -X (left) on joystick is +Theta (counter-clockwise) on robot
+		));
 	}
 	
 	public Command getAutonomousCommand() {
-		return null;
+		return AutoBuilder.followPath(PathPlannerPath.fromPathFile("2m_forward"));
 	}
 }
