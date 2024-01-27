@@ -13,8 +13,9 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
@@ -38,6 +39,8 @@ import java.util.function.DoubleSupplier;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 public class DrivetrainSubsystem implements Subsystem {
 
@@ -46,7 +49,8 @@ public class DrivetrainSubsystem implements Subsystem {
     private static boolean useVision = true;
 
     private final NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
-    private final NetworkTableEntry botPoseEntry = limelightNT.getEntry("botpose"); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
+    private final DoubleSubscriber validTargetSubscriber = limelightNT.getDoubleTopic("tv").subscribe(0);
+    private final DoubleArraySubscriber botPoseSubscriber = limelightNT.getDoubleArrayTopic("botpose").subscribe(new double[0]); // double array [x, y, z in meters, roll, pitch, yaw in degrees, combined latency in ms]
 
     // Telemetry
 
@@ -202,7 +206,11 @@ public class DrivetrainSubsystem implements Subsystem {
     }
 
     private void visionPosePeriodic() {
-        double[] botPose = botPoseEntry.getDoubleArray(new double[0]);
+        
+        if(validTargetSubscriber.get() != 1)
+            return;
+
+        double[] botPose = botPoseSubscriber.get();
         if(botPose.length < 7)
             return;
         
@@ -386,6 +394,15 @@ public class DrivetrainSubsystem implements Subsystem {
             drive(xVelocity, yVelocity, rotVelocity, FIELD_RELATIVE_DRIVE);
 
         }, this);
+    }
+
+    public Command alignToTrap() {
+        return AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromPathFile("Align_Red_Amp"), new PathConstraints(
+            1,
+            10,
+            Math.PI,
+            4 * Math.PI
+        ));
     }
     
 }

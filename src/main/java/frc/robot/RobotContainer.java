@@ -51,6 +51,7 @@ public class RobotContainer {
 		// Drive command
 
 		Trigger startButton = driverXBoxController.start();
+		Trigger aButton = driverXBoxController.a();
 
 		startButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
 
@@ -60,6 +61,9 @@ public class RobotContainer {
 				() -> -driverXBoxController.getLeftX(), // -X (left) on joystick is +Y (left) on robot
 				() -> -driverXBoxController.getRightX() // -X (left) on joystick is +Theta (counter-clockwise) on robot
 		));
+
+		aButton.whileTrue(drivetrainSubsystem.alignToTrap());
+
 	}
 	
 	public Command getAutonomousCommand() {
