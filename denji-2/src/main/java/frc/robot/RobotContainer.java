@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.JointSubsystem;
+import frc.robot.subsystems.TestMotorSubsystem;
 
 import static frc.robot.Constants.*;
 
@@ -51,6 +52,7 @@ public class RobotContainer {
   private final DrivetrainSubsystem drivetrainSubsystem = new DrivetrainSubsystem(field2d);
   public final JointSubsystem jointSubsystem = new JointSubsystem();
   public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  public final TestMotorSubsystem testMotorSubsystem = new TestMotorSubsystem();
   
   private final CommandXboxController driverXBoxController = new CommandXboxController(XBOX_CONTROLLER_PORT);
   private final GenericHID driverJoystick = new GenericHID(JOYSTICK_PORT);
@@ -59,121 +61,42 @@ public class RobotContainer {
 
   private final HashMap<String, Command> eventMap = new HashMap<>();
 
-    private final SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
-        drivetrainSubsystem::getPose,
-        drivetrainSubsystem::resetPose,
-        drivetrainSubsystem.getKinematics(),
-        new PIDConstants(5.0, 0.0, 0.0),
-        new PIDConstants(1.5, 0.0, 0.0),
-        drivetrainSubsystem::setModuleStates,
-        eventMap, true, drivetrainSubsystem
-    );
+    // private final SwerveAutoBuilder autoBuilder = new SwerveAutoBuilder(
+    //     drivetrainSubsystem::getPose,
+    //     drivetrainSubsystem::resetPose,
+    //     drivetrainSubsystem.getKinematics(),
+    //     new PIDConstants(5.0, 0.0, 0.0),
+    //     new PIDConstants(1.5, 0.0, 0.0),
+    //     drivetrainSubsystem::setModuleStates,
+    //     eventMap, true, drivetrainSubsystem
+    // );
 
     private final SendableChooser<Command> autoChooser = new SendableChooser<>();
   
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     SmartDashboard.putData("Field", field2d);
-    configureAuto();
+    // configureAuto();
     configureBindings();
   }
 
-  private void configureAuto() {
+  // private void configureAuto() {
 
-    eventMap.put("place", Commands.sequence(
-        jointSubsystem.releasePositionCommand(),
-        Commands.waitSeconds(1.0),
-        Commands.runEnd(() -> intakeSubsystem.setMotorDutyCycle(1.0), () -> intakeSubsystem.setMotorDutyCycle(0), intakeSubsystem).withTimeout(0.2),
-        Commands.run(() -> jointSubsystem.setPosition(JOINT_STOW_POSITION), jointSubsystem).withTimeout(0.5))
-    );
+  //   eventMap.put("place", Commands.sequence(
+  //       jointSubsystem.releasePositionCommand(),
+  //       Commands.waitSeconds(1.0),
+  //       Commands.runEnd(() -> intakeSubsystem.setMotorDutyCycle(1.0), () -> intakeSubsystem.setMotorDutyCycle(0), intakeSubsystem).withTimeout(0.2),
+  //       Commands.run(() -> jointSubsystem.setPosition(JOINT_STOW_POSITION), jointSubsystem).withTimeout(0.5))
+  //   );
 
-    autoChooser.addOption("No Auto", null);
-    autoChooser.addOption("Place Mobility Open", autoBuilder.fullAuto(PathPlanner.loadPath("Place Mobility Open", new PathConstraints(2.0, 1.5))));
-    SmartDashboard.putData("Auto Selection", autoChooser);
-  }
+  //   autoChooser.addOption("No Auto", null);
+  //   autoChooser.addOption("Place Mobility Open", autoBuilder.fullAuto(PathPlanner.loadPath("Place Mobility Open", new PathConstraints(2.0, 1.5))));
+  //   SmartDashboard.putData("Auto Selection", autoChooser);
+  // }
   
   private void configureBindings() {
     
-    // Define all of the input devices on the Xbox Controller and Driver Station
-    Trigger aButton = driverXBoxController.a();
-    Trigger bButton = driverXBoxController.b();
-    Trigger xButton = driverXBoxController.x();
-    Trigger yButton = driverXBoxController.y();
     
-    Trigger leftJoystickDown = driverXBoxController.leftStick();
-    Trigger rightJoystickDown = driverXBoxController.rightStick();
-    
-    Trigger backButton = driverXBoxController.back();
-    Trigger startButton = driverXBoxController.start();
-    
-    Trigger leftBumper = driverXBoxController.leftBumper();
-    Trigger rightBumper = driverXBoxController.rightBumper();
-    
-    Trigger leftJoystickY = driverXBoxController
-    .axisGreaterThan(XboxController.Axis.kLeftY.value, XBOX_JOYSTICK_THRESHOLD)
-    .or(driverXBoxController.axisLessThan(XboxController.Axis.kLeftY.value, -XBOX_JOYSTICK_THRESHOLD));
-    
-    Trigger rightJoystickY = driverXBoxController
-    .axisGreaterThan(XboxController.Axis.kRightY.value, XBOX_JOYSTICK_THRESHOLD)
-    .or(driverXBoxController.axisLessThan(XboxController.Axis.kRightY.value, -XBOX_JOYSTICK_THRESHOLD));
-    
-    Trigger leftTrigger = driverXBoxController.leftTrigger();
-    Trigger rightTrigger = driverXBoxController.rightTrigger();
-    
-    //leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(leftTrigger));
-    //leftTrigger.whileTrue(Commands.run(() -> jointSubsystem.setMotorPercent(0.5)));
-    //leftTrigger.onFalse(Commands.run(() -> jointSubsystem.setMotorPercent(0.0)));
-    //rightTrigger.whileTrue(Commands.run(() -> jointSubsystem.setMotorPercent(-0.5)));
-    //rightTrigger.onFalse(Commands.run(() -> jointSubsystem.setMotorPercent(0.0)));
-    aButton.onTrue(jointSubsystem.grabPositionCommand());
-    leftTrigger.whileTrue(jointSubsystem.launchPositionCommand());
-    rightTrigger.whileTrue(jointSubsystem.releasePositionCommand());
-    yButton.onTrue(jointSubsystem.launchPositionCommand());
-    bButton.onTrue(jointSubsystem.releasePositionCommand());
-    //leftTrigger.whileTrue(Commands.print("working..."));
-    //leftTrigger.whileTrue(jointSubsystem.grabPositionCommand(() -> (false)));
-    // Left Bumper starts outtake (spits cube out) 
-    leftBumper.whileTrue(Commands.runEnd(() -> {
-      intakeSubsystem.setMotorDutyCycle(1.0);
-    }, () -> {
-      intakeSubsystem.setMotorDutyCycle(0);
-    }, intakeSubsystem));
-    rightBumper.whileTrue(Commands.runEnd(() -> {
-      intakeSubsystem.setMotorDutyCycle(-1.0);
-    }, () -> {
-      intakeSubsystem.setMotorDutyCycle(0);
-    }, intakeSubsystem));
-
-    bButton.whileTrue(Commands.runEnd(() -> {
-      if (14.0 < jointSubsystem.getPosition() && 16.0 > jointSubsystem.getPosition()) {
-        intakeSubsystem.setMotorDutyCycle(1.0);
-      }
-    }, () -> {
-      intakeSubsystem.setMotorDutyCycle(0);
-    }, intakeSubsystem));
-    aButton.whileTrue(Commands.runEnd(() -> {
-      intakeSubsystem.setMotorDutyCycle(-1.0);
-    }, () -> {
-      intakeSubsystem.setMotorDutyCycle(0);
-    }, intakeSubsystem));
-
-    
-    // Set up the default command for the drivetrain.
-    // The controls are for field-oriented driving:
-    // Left stick Y axis -> forward and backwards movement
-    // Left stick X axis -> left and right movement
-    // Right stick X axis -> rotation
-    // Drivetrain Commands
-    // Drive command
-
-    //aButton.whileTrue(drivetrainSubsystem.runForward());
-
-    drivetrainSubsystem.setDefaultCommand(drivetrainSubsystem.joystickDriveCommand(
-        () -> -Math.pow(driverXBoxController.getLeftY(), 3),
-        () -> -Math.pow(driverXBoxController.getLeftX(), 3),
-        () -> -Math.pow(driverXBoxController.getRightX(), 3))); // Negative because counter clockwise (left/-x on controller) should be positive
-
-    xButton.onTrue(Commands.runOnce(() -> {drivetrainSubsystem.zeroGyro();}));
   }
   
   public Command getAutonomousCommand() {

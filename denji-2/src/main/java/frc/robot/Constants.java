@@ -13,6 +13,9 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  // TEST MOTOR
+  public static final int TEST_MOTOR_ID = 1;
+
   //Controls
   public static final int XBOX_CONTROLLER_PORT = 0;
   public static final double XBOX_JOYSTICK_THRESHOLD = 0.05D;

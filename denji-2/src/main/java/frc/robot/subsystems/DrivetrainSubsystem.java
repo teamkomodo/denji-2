@@ -137,10 +137,10 @@ public class DrivetrainSubsystem implements Subsystem {
         drive(0, 0, 0, false);
     }
 
-    public void zeroGyro() {
-        rotationOffsetRadians = -navX.getRotation2d().getRadians();
-        //resetPose(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(0)));
-    }
+    // public void zeroGyro() {
+    //     rotationOffsetRadians = -navX.getRotation2d().getRadians();
+    //     //resetPose(new Pose2d(getPose().getTranslation(), Rotation2d.fromDegrees(0)));
+    // }
 
     // Getters
 
@@ -267,13 +267,13 @@ public class DrivetrainSubsystem implements Subsystem {
         );
     }
 
-  public void zeroGyro() {
-    rotationOffset = getGyroYawRaw().getRadians();
-    new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET), 1000);
-    new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET), 1000);
-    new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET), 1000);
-    new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET), 1000);
-  }
+    public void zeroGyro() {
+//     rotationOffset = getGyroYawRaw().getRadians();
+//     new CANCoder(FRONT_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_LEFT_MODULE_STEER_OFFSET), 1000);
+//     new CANCoder(FRONT_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(FRONT_RIGHT_MODULE_STEER_OFFSET), 1000);
+//     new CANCoder(BACK_LEFT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_LEFT_MODULE_STEER_OFFSET), 1000);
+//     new CANCoder(BACK_RIGHT_MODULE_STEER_ENCODER).configMagnetOffset(Math.toDegrees(BACK_RIGHT_MODULE_STEER_OFFSET), 1000);
+    }
 
     public CommandBase enableSlowModeCommand() {
         return Commands.runOnce(() -> { slowMode = true; });
