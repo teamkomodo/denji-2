@@ -72,22 +72,22 @@ public final class Constants {
 	public static final int FRONT_LEFT_DRIVE_MOTOR_ID = 4;
 	public static final int FRONT_LEFT_STEER_MOTOR_ID = 5;
 	public static final int FRONT_LEFT_STEER_ENCODER_ID = 10;
-	public static final double FRONT_LEFT_STEER_OFFSET = -Math.toRadians(293.1);
+	public static final double FRONT_LEFT_STEER_OFFSET = -Math.toRadians(293.1-45);
 	
 	public static final int FRONT_RIGHT_DRIVE_MOTOR_ID = 6;
 	public static final int FRONT_RIGHT_STEER_MOTOR_ID = 7;
 	public static final int FRONT_RIGHT_STEER_ENCODER_ID = 11;
-	public static final double FRONT_RIGHT_STEER_OFFSET = -Math.toRadians(357.78);
+	public static final double FRONT_RIGHT_STEER_OFFSET = -Math.toRadians(357.78-225);
 	
 	public static final int BACK_LEFT_DRIVE_MOTOR_ID = 2;
 	public static final int BACK_LEFT_STEER_MOTOR_ID = 3;
 	public static final int BACK_LEFT_STEER_ENCODER_ID = 9;
-	public static final double BACK_LEFT_STEER_OFFSET = -Math.toRadians(327.3);
+	public static final double BACK_LEFT_STEER_OFFSET = -Math.toRadians(327.3+45);
 	
 	public static final int BACK_RIGHT_DRIVE_MOTOR_ID = 0;
 	public static final int BACK_RIGHT_STEER_MOTOR_ID = 1;
 	public static final int BACK_RIGHT_STEER_ENCODER_ID = 8;
-	public static final double BACK_RIGHT_STEER_OFFSET = -Math.toRadians(170.75);
+	public static final double BACK_RIGHT_STEER_OFFSET = -Math.toRadians(170.75+45);
 	
 	public static final double WHEEL_DIAMETER = 0.1016;
 	public static final double DRIVE_REDUCTION = (14.0 / 50.0) * (25.0 / 19.0) * (15.0 / 45.0);
