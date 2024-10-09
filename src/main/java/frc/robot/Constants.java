@@ -66,8 +66,8 @@ public final class Constants {
 	public static final double LINEAR_SLOW_MODE_MODIFIER = 0.5;
 	public static final double ANGULAR_SLOW_MODE_MODIFIER = 0.2;
 	
-	public static final double DRIVETRAIN_WIDTH = 0.5969;
-	public static final double DRIVETRAIN_LENGTH = 0.5969;
+	public static final double DRIVETRAIN_WIDTH = 0.4864163246;
+	public static final double DRIVETRAIN_LENGTH = 0.4079583662;
 	
 	public static final int FRONT_LEFT_DRIVE_MOTOR_ID = 4;
 	public static final int FRONT_LEFT_STEER_MOTOR_ID = 5;
